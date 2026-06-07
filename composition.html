@@ -245,7 +245,10 @@ async function load() {
     // ── Render ────────────────────────────────────────────────────────────────
 
     const yearStr = formatYear(comp);
-    const instrLabel = instr ? instr.description_no : (comp.raw_instrumentation || null);
+    const instrParts = [];
+    if (instr) instrParts.push(instr.description_no);
+    if (comp.raw_instrumentation) instrParts.push(comp.raw_instrumentation);
+    const instrLabel = instrParts.length ? instrParts.join(' / ') : null;
 
     // Meta grid items
     const metaItems = [
