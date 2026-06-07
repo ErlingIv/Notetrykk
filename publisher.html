@@ -97,6 +97,13 @@
     color: var(--muted); background: var(--bg);
   }
 
+  /* ── Sortable headers ── */
+  .score-table th.sortable { cursor: pointer; user-select: none; }
+  .score-table th.sortable:hover { color: var(--ink); }
+  .score-table th.sort-asc::after  { content: ' ↑'; font-size: 0.65rem; }
+  .score-table th.sort-desc::after { content: ' ↓'; font-size: 0.65rem; }
+  .instr-badge.raw { border-color: #c8a84b; color: #7a5c2a; background: #fdf6e3; }
+
   .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
   .error-state   { color: #a32d2d; font-size: 0.9rem; padding: 1.5rem 0; }
 
@@ -204,46 +211,49 @@ async function load() {
         </div>
       </div>`;
 
-    const tableHtml = compositions.length === 0
-      ? '<div class="loading-state">Ingen komposisjoner funnet for dette forlaget.</div>'
-      : `
-        <table class="score-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tittel</th>
-              <th class="hide-sm">År</th>
-              <th class="hide-sm">Platenr</th>
-              <th class="hide-sm">Besetning</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${compositions.map(c => {
-              const instr = instrMap[c.instrumentation_id];
-              const instrParts = [];
-              if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
-              if (c.raw_instrumentation) instrParts.push(`⚠ rå: ${c.raw_instrumentation}`);
-              const instrLabel = instrParts.join(' / ');
-              const composers = composerMap[c.composition_id] || [];
-              const lyricists = lyricistMap[c.composition_id] || [];
-              return `
-                <tr class="score-row" onclick="window.location='composition.html?id=${c.composition_id}'">
-                  <td class="id-cell">#${c.composition_id}</td>
-                  <td class="score-title-cell">
-                    <div class="title">${escHtml(c.title || '—')}</div>
-                    ${c.subtitle ? `<div class="subtitle">${escHtml(c.subtitle)}</div>` : ''}
-                    ${composers.map(cm => `<div class="composer"><a href="composer.html?id=${cm.id}" onclick="event.stopPropagation()">${escHtml(cm.name)}</a></div>`).join('')}
-                    ${lyricists.length ? `<div class="lyricist">✍ ${lyricists.map(escHtml).join(', ')}</div>` : ''}
-                  </td>
-                  <td class="year-cell hide-sm">${formatYear(c) || '—'}</td>
-                  <td class="plate-cell hide-sm">${c.plate_number ? escHtml(c.plate_number) : '—'}</td>
-                  <td class="hide-sm">${instrParts.length ? instrParts.map(p =>
-                      `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
-                    ).join(' ') : ''}</td>
-                </tr>`;
-            }).join('')}
-          </tbody>
-        </table>`;
+    let sortKey = 'year';
+    let sortDir = 'asc';
+
+    function renderTable() {
+      const sorted = [...compositions].sort((a, b) => {
+        let va = sortKey === 'title' ? (a.title || '') : (a.year_issued || '');
+        let vb = sortKey === 'title' ? (b.title || '') : (b.year_issued || '');
+        const cmp = va.localeCompare(vb, 'no');
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+
+      document.querySelectorAll('.score-table th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === sortKey)
+          th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      });
+
+      const tbody = document.querySelector('.score-table tbody');
+      if (!tbody) return;
+      tbody.innerHTML = sorted.map(c => {
+        const instr = instrMap[c.instrumentation_id];
+        const instrParts = [];
+        if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
+        if (c.raw_instrumentation) instrParts.push(`⚠ rå: ${c.raw_instrumentation}`);
+        const composers = composerMap[c.composition_id] || [];
+        const lyricists = lyricistMap[c.composition_id] || [];
+        return `
+          <tr class="score-row" onclick="window.location='composition.html?id=${c.composition_id}'">
+            <td class="id-cell">#${c.composition_id}</td>
+            <td class="score-title-cell">
+              <div class="title">${escHtml(c.title || '—')}</div>
+              ${c.subtitle ? `<div class="subtitle">${escHtml(c.subtitle)}</div>` : ''}
+              ${composers.map(cm => `<div class="composer"><a href="composer.html?id=${cm.id}" onclick="event.stopPropagation()">${escHtml(cm.name)}</a></div>`).join('')}
+              ${lyricists.length ? `<div class="lyricist">✍ ${lyricists.map(escHtml).join(', ')}</div>` : ''}
+            </td>
+            <td class="year-cell hide-sm">${formatYear(c) || '—'}</td>
+            <td class="plate-cell hide-sm">${c.plate_number ? escHtml(c.plate_number) : '—'}</td>
+            <td class="hide-sm">${instrParts.length ? instrParts.map(p =>
+              `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
+            ).join(' ') : ''}</td>
+          </tr>`;
+      }).join('');
+    }
 
     el.innerHTML = `
       ${heroHtml}
@@ -251,8 +261,34 @@ async function load() {
         Verk
         <span class="scores-heading-count">${compositions.length} komposisjon${compositions.length !== 1 ? 'er' : ''}</span>
       </div>
-      ${tableHtml}
+      ${compositions.length === 0
+        ? '<div class="loading-state">Ingen komposisjoner funnet for dette forlaget.</div>'
+        : `<table class="score-table">
+            <thead><tr>
+              <th>ID</th>
+              <th class="sortable" data-sort="title">Tittel</th>
+              <th class="sortable hide-sm sort-asc" data-sort="year">År</th>
+              <th class="hide-sm">Platenr</th>
+              <th class="hide-sm">Besetning</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>`}
     `;
+
+    if (compositions.length > 0) {
+      renderTable();
+      document.querySelectorAll('.score-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          if (sortKey === th.dataset.sort) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortKey = th.dataset.sort;
+            sortDir = 'asc';
+          }
+          renderTable();
+        });
+      });
+    }
 
   } catch(e) {
     document.getElementById('content').innerHTML =

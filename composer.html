@@ -215,6 +215,14 @@
     white-space: nowrap;
   }
 
+  /* ── Sortable headers ── */
+  .score-table th.sortable {
+    cursor: pointer; user-select: none;
+  }
+  .score-table th.sortable:hover { color: var(--ink); }
+  .score-table th.sort-asc::after  { content: ' ↑'; font-size: 0.65rem; }
+  .score-table th.sort-desc::after { content: ' ↓'; font-size: 0.65rem; }
+
   /* ── Loading / error ── */
   .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
   .error-state   { color: #a32d2d; font-size: 0.9rem; padding: 1.5rem 0; }
@@ -377,8 +385,8 @@ async function load() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Tittel</th>
-              <th class="hide-sm">År</th>
+              <th class="sortable" data-sort="title" id="th-title">Tittel</th>
+              <th class="sortable hide-sm" data-sort="year" id="th-year">År</th>
               <th class="hide-sm">Forlag</th>
               <th class="hide-sm">Besetning</th>
             </tr>
