@@ -131,6 +131,51 @@ const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 const params = new URLSearchParams(window.location.search);
 const pubId  = params.get('id');
 
+function renderTable() {
+  const { compositions, instrMap, composerMap, lyricistMap } = window._tableData || {};
+  if (!compositions) return;
+  const sortKey = window._sortKey || 'year';
+  const sortDir = window._sortDir || 'asc';
+
+  const sorted = [...compositions].sort((a, b) => {
+    let va = sortKey === 'title' ? (a.title || '') : (a.year_issued || '');
+    let vb = sortKey === 'title' ? (b.title || '') : (b.year_issued || '');
+    return sortDir === 'asc' ? va.localeCompare(vb, 'no') : vb.localeCompare(va, 'no');
+  });
+
+  document.querySelectorAll('.score-table th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.sort === sortKey)
+      th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  });
+
+  const tbody = document.querySelector('.score-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(c => {
+    const instr = instrMap[c.instrumentation_id];
+    const instrParts = [];
+    if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
+    if (c.raw_instrumentation) instrParts.push(`⚠ rå: ${c.raw_instrumentation}`);
+    const composers = (composerMap[c.composition_id] || []);
+    const lyricists = (lyricistMap[c.composition_id] || []);
+    return `
+      <tr class="score-row" onclick="window.location='composition.html?id=${c.composition_id}'">
+        <td class="id-cell">#${c.composition_id}</td>
+        <td class="score-title-cell">
+          <div class="title">${escHtml(c.title || '—')}</div>
+          ${c.subtitle ? `<div class="subtitle">${escHtml(c.subtitle)}</div>` : ''}
+          ${composers.map(cm => `<div class="composer"><a href="composer.html?id=${cm.id}" onclick="event.stopPropagation()">${escHtml(cm.name)}</a></div>`).join('')}
+          ${lyricists.length ? `<div class="lyricist">✍ ${lyricists.map(escHtml).join(', ')}</div>` : ''}
+        </td>
+        <td class="year-cell hide-sm">${formatYear(c) || '—'}</td>
+        <td class="plate-cell hide-sm">${c.plate_number ? escHtml(c.plate_number) : '—'}</td>
+        <td class="hide-sm">${instrParts.length ? instrParts.map(p =>
+          `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
+        ).join(' ') : ''}</td>
+      </tr>`;
+  }).join('');
+}
+
 async function load() {
   const el = document.getElementById('content');
   if (!pubId) { el.innerHTML = '<p class="error-state">Ingen forlag-ID angitt.</p>'; return; }
@@ -211,51 +256,10 @@ async function load() {
         </div>
       </div>`;
 
-    window._sortKey = window._sortKey || 'year';
-    window._sortDir = window._sortDir || 'asc';
-
-    function renderTable() {
-      const sortKey = window._sortKey;
-      const sortDir = window._sortDir;
-      const sorted = [...compositions].sort((a, b) => {
-        let va = sortKey === 'title' ? (a.title || '') : (a.year_issued || '');
-        let vb = sortKey === 'title' ? (b.title || '') : (b.year_issued || '');
-        const cmp = va.localeCompare(vb, 'no');
-        return sortDir === 'asc' ? cmp : -cmp;
-      });
-
-      document.querySelectorAll('.score-table th.sortable').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        if (th.dataset.sort === sortKey)
-          th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-      });
-
-      const tbody = document.querySelector('.score-table tbody');
-      if (!tbody) return;
-      tbody.innerHTML = sorted.map(c => {
-        const instr = instrMap[c.instrumentation_id];
-        const instrParts = [];
-        if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
-        if (c.raw_instrumentation) instrParts.push(`⚠ rå: ${c.raw_instrumentation}`);
-        const composers = composerMap[c.composition_id] || [];
-        const lyricists = lyricistMap[c.composition_id] || [];
-        return `
-          <tr class="score-row" onclick="window.location='composition.html?id=${c.composition_id}'">
-            <td class="id-cell">#${c.composition_id}</td>
-            <td class="score-title-cell">
-              <div class="title">${escHtml(c.title || '—')}</div>
-              ${c.subtitle ? `<div class="subtitle">${escHtml(c.subtitle)}</div>` : ''}
-              ${composers.map(cm => `<div class="composer"><a href="composer.html?id=${cm.id}" onclick="event.stopPropagation()">${escHtml(cm.name)}</a></div>`).join('')}
-              ${lyricists.length ? `<div class="lyricist">✍ ${lyricists.map(escHtml).join(', ')}</div>` : ''}
-            </td>
-            <td class="year-cell hide-sm">${formatYear(c) || '—'}</td>
-            <td class="plate-cell hide-sm">${c.plate_number ? escHtml(c.plate_number) : '—'}</td>
-            <td class="hide-sm">${instrParts.length ? instrParts.map(p =>
-              `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
-            ).join(' ') : ''}</td>
-          </tr>`;
-      }).join('');
-    }
+    // Store data globally so renderTable can access it after load() completes
+    window._tableData = { compositions, instrMap, composerMap, lyricistMap };
+    window._sortKey = 'year';
+    window._sortDir = 'asc';
 
     el.innerHTML = `
       ${heroHtml}
@@ -269,7 +273,7 @@ async function load() {
             <thead><tr>
               <th>ID</th>
               <th class="sortable" data-sort="title">Tittel</th>
-              <th class="sortable hide-sm sort-asc" data-sort="year">År</th>
+              <th class="sortable hide-sm" data-sort="year">År</th>
               <th class="hide-sm">Platenr</th>
               <th class="hide-sm">Besetning</th>
             </tr></thead>
@@ -281,12 +285,8 @@ async function load() {
       renderTable();
       document.querySelectorAll('.score-table th.sortable').forEach(th => {
         th.addEventListener('click', () => {
-          if (window._sortKey === th.dataset.sort) {
-            window._sortDir = window._sortDir === 'asc' ? 'desc' : 'asc';
-          } else {
-            window._sortKey = th.dataset.sort;
-            window._sortDir = 'asc';
-          }
+          window._sortKey = th.dataset.sort;
+          window._sortDir = (th.classList.contains('sort-asc')) ? 'desc' : 'asc';
           renderTable();
         });
       });
