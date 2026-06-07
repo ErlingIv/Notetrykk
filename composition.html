@@ -304,7 +304,7 @@ async function load() {
           <div class="periodical-block">
             <div class="periodical-title">${per ? escHtml(per.title) : '—'}</div>
             <div class="periodical-ref">
-              ${issue?.raw_reference ? `Ref: ${escHtml(issue.raw_reference)}` : ''}
+              ${issue?.raw_reference ? escHtml(issue.raw_reference) : ''}
               ${ci.plate_number_in_issue ? ` · Pl. ${escHtml(ci.plate_number_in_issue)}` : ''}
             </div>
           </div>`;
