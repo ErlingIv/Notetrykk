@@ -145,16 +145,17 @@ async function load() {
     );
     const compositions = await cR.json();
 
-    // 3. Instrumentations
-    const instrIds = [...new Set(compositions.map(c => c.instrumentation_id).filter(Boolean))];
+    // 3. Instrumentations — load all codes so raw_instrumentation can also be resolved
     const instrMap = {};
-    if (instrIds.length) {
-      const iR = await fetch(
-        `${SUPABASE_URL}/rest/v1/instrumentation?instrumentation_id=in.(${instrIds.join(',')})&select=instrumentation_id,description_no`,
-        { headers: H }
-      );
-      (await iR.json()).forEach(i => { instrMap[i.instrumentation_id] = i; });
-    }
+    const rawCodeMap = {};
+    const iR = await fetch(
+      `${SUPABASE_URL}/rest/v1/instrumentation?select=instrumentation_id,legacy_code,description_no`,
+      { headers: H }
+    );
+    (await iR.json()).forEach(i => {
+      instrMap[i.instrumentation_id] = i;
+      if (i.legacy_code) rawCodeMap[i.legacy_code] = i.description_no;
+    });
 
     // 4. Composers and lyricists for these compositions
     const compIds = compositions.map(c => c.composition_id);
@@ -220,8 +221,8 @@ async function load() {
             ${compositions.map(c => {
               const instr = instrMap[c.instrumentation_id];
               const instrParts = [];
-              if (instr) instrParts.push(instr.description_no);
-              if (c.raw_instrumentation) instrParts.push(c.raw_instrumentation);
+              if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
+              if (c.raw_instrumentation) instrParts.push(`⚠ rå: ${c.raw_instrumentation}`);
               const instrLabel = instrParts.join(' / ');
               const composers = composerMap[c.composition_id] || [];
               const lyricists = lyricistMap[c.composition_id] || [];
@@ -236,7 +237,9 @@ async function load() {
                   </td>
                   <td class="year-cell hide-sm">${formatYear(c) || '—'}</td>
                   <td class="plate-cell hide-sm">${c.plate_number ? escHtml(c.plate_number) : '—'}</td>
-                  <td class="hide-sm">${instrLabel ? `<span class="instr-badge">${escHtml(instrLabel)}</span>` : ''}</td>
+                  <td class="hide-sm">${instrParts.length ? instrParts.map(p =>
+                      `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
+                    ).join(' ') : ''}</td>
                 </tr>`;
             }).join('')}
           </tbody>

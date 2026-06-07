@@ -97,6 +97,9 @@
     border: 1px solid var(--border); color: var(--muted);
     background: var(--bg);
   }
+  .instr-badge.raw {
+    border-color: #c8a84b; color: #7a5c2a; background: #fdf6e3;
+  }
 
   /* ── People section ── */
   .section-heading {
@@ -190,15 +193,17 @@ async function load() {
       publisher = (await pR.json())[0];
     }
 
-    // 3. Instrumentation
+    // 3. Instrumentation — load all codes so raw_instrumentation can also be resolved
     let instr = null;
-    if (comp.instrumentation_id) {
-      const iR = await fetch(
-        `${SUPABASE_URL}/rest/v1/instrumentation?instrumentation_id=eq.${comp.instrumentation_id}&select=description_no,description_en`,
-        { headers: H }
-      );
-      instr = (await iR.json())[0];
-    }
+    const rawCodeMap = {};
+    const iR = await fetch(
+      `${SUPABASE_URL}/rest/v1/instrumentation?select=instrumentation_id,legacy_code,description_no,description_en`,
+      { headers: H }
+    );
+    (await iR.json()).forEach(i => {
+      if (i.instrumentation_id === comp.instrumentation_id) instr = i;
+      if (i.legacy_code) rawCodeMap[i.legacy_code] = i.description_no;
+    });
 
     // 4. People (all roles)
     const cpR = await fetch(
@@ -246,8 +251,8 @@ async function load() {
 
     const yearStr = formatYear(comp);
     const instrParts = [];
-    if (instr) instrParts.push(instr.description_no);
-    if (comp.raw_instrumentation) instrParts.push(comp.raw_instrumentation);
+    if (instr) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
+    if (comp.raw_instrumentation) instrParts.push(`⚠ rå: ${comp.raw_instrumentation}`);
     const instrLabel = instrParts.length ? instrParts.join(' / ') : null;
 
     // Meta grid items
@@ -258,7 +263,9 @@ async function load() {
           ? `<a href="publisher.html?id=${publisher.publisher_id}">${escHtml(publisher.publisher_name)}</a>${publisher.city ? `<br><span style="font-size:0.8rem;color:var(--muted)">${escHtml(publisher.city)}</span>` : ''}`
           : null },
       { label: 'Platenummer', value: comp.plate_number || null },
-      { label: 'Besetning', value: instrLabel ? `<span class="instr-badge">${escHtml(instrLabel)}</span>` : null },
+      { label: 'Besetning', value: instrParts.length ? instrParts.map(p =>
+          `<span class="instr-badge${p.startsWith('⚠') ? ' raw' : ''}">${escHtml(p)}</span>`
+        ).join(' ') : null },
     ].filter(m => m.value);
 
     // People
