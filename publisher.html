@@ -211,10 +211,12 @@ async function load() {
         </div>
       </div>`;
 
-    let sortKey = 'year';
-    let sortDir = 'asc';
+    window._sortKey = window._sortKey || 'year';
+    window._sortDir = window._sortDir || 'asc';
 
     function renderTable() {
+      const sortKey = window._sortKey;
+      const sortDir = window._sortDir;
       const sorted = [...compositions].sort((a, b) => {
         let va = sortKey === 'title' ? (a.title || '') : (a.year_issued || '');
         let vb = sortKey === 'title' ? (b.title || '') : (b.year_issued || '');
@@ -279,11 +281,11 @@ async function load() {
       renderTable();
       document.querySelectorAll('.score-table th.sortable').forEach(th => {
         th.addEventListener('click', () => {
-          if (sortKey === th.dataset.sort) {
-            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          if (window._sortKey === th.dataset.sort) {
+            window._sortDir = window._sortDir === 'asc' ? 'desc' : 'asc';
           } else {
-            sortKey = th.dataset.sort;
-            sortDir = 'asc';
+            window._sortKey = th.dataset.sort;
+            window._sortDir = 'asc';
           }
           renderTable();
         });

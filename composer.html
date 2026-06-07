@@ -223,6 +223,13 @@
   .score-table th.sort-asc::after  { content: ' ↑'; font-size: 0.65rem; }
   .score-table th.sort-desc::after { content: ' ↓'; font-size: 0.65rem; }
 
+  /* ── Sortable headers ── */
+  .score-table th.sortable { cursor: pointer; user-select: none; }
+  .score-table th.sortable:hover { color: var(--ink); }
+  .score-table th.sort-asc::after  { content: ' ↑'; font-size: 0.65rem; }
+  .score-table th.sort-desc::after { content: ' ↓'; font-size: 0.65rem; }
+  .instr-badge.raw { border-color: #c8a84b; color: #7a5c2a; background: #fdf6e3; }
+
   /* ── Loading / error ── */
   .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
   .error-state   { color: #a32d2d; font-size: 0.9rem; padding: 1.5rem 0; }
