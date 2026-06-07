@@ -387,9 +387,10 @@ async function load() {
               const instr   = instrMap[c.instrumentation_id];
               const lyricists = lyricistMap[c.composition_id] || [];
               const yearStr = formatYear(c);
-              const instrLabel = instr
-                ? instr.description_no
-                : (c.raw_instrumentation || '');
+              const instrParts = [];
+              if (instr) instrParts.push(instr.description_no);
+              if (c.raw_instrumentation) instrParts.push(c.raw_instrumentation);
+              const instrLabel = instrParts.join(' / ');
 
               return `
                 <tr class="score-row" onclick="window.location='composition.html?id=${c.composition_id}'">
