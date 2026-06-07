@@ -305,14 +305,22 @@
 
   <div class="header-search">
     <div class="search-wrap">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <label class="search-label">Tittel / Komponist</label>
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" style="top:calc(50% + 10px)">
         <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
         <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
       <input class="search-input" id="globalSearch" type="text"
-             placeholder="Søk etter composition_id, tittel eller komponist…"
+             placeholder="Tittel eller komponist…"
              oninput="handleSearch(this.value)" autocomplete="off">
       <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="search-wrap-publisher">
+      <label class="search-label">Platenummer</label>
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="top:calc(50% + 10px)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <input class="search-input" type="text" placeholder="Platenummer…"
+             oninput="handlePlateSearch(this.value)" autocomplete="off">
+      <div class="search-results" id="plateSearchResults"></div>
     </div>
   </div>
 </header>
@@ -537,20 +545,20 @@ function renderPublishersError() {
 let _searchTimeout = null;
 let _publisherSearchTimeout = null;
 
-function handlePublisherSearch(query) {
+function handlePlateSearch(query) {
   clearTimeout(_publisherSearchTimeout);
-  const resultsEl = document.getElementById('publisherSearchResults');
+  const resultsEl = document.getElementById('plateSearchResults');
   if (!query.trim()) { resultsEl.style.display = 'none'; return; }
-  _publisherSearchTimeout = setTimeout(() => doPublisherSearch(query.trim()), 280);
+  _publisherSearchTimeout = setTimeout(() => doPlateSearch(query.trim()), 280);
 }
 
-async function doPublisherSearch(query) {
-  const resultsEl = document.getElementById('publisherSearchResults');
+async function doPlateSearch(query) {
+  const resultsEl = document.getElementById('plateSearchResults');
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div class="search-empty">Søker…</div>';
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/publisher?publisher_name=ilike.*${encodeURIComponent(query)}*&select=publisher_id,publisher_name,city&order=publisher_name.asc&limit=8`,
+      `${SUPABASE_URL}/rest/v1/composition?plate_number=ilike.*${encodeURIComponent(query)}*&select=composition_id,title,year_issued,plate_number,publisher_id&order=plate_number.asc&limit=8`,
       { headers: H }
     );
     const rows = await r.json();
@@ -558,10 +566,10 @@ async function doPublisherSearch(query) {
       resultsEl.innerHTML = '<div class="search-empty">Ingen treff</div>';
       return;
     }
-    resultsEl.innerHTML = rows.map(p => `
-      <a class="search-result-item" href="publisher.html?id=${p.publisher_id}">
-        <span class="search-result-title">${p.publisher_name || '—'}</span>
-        <span class="search-result-meta">${p.city || ''}</span>
+    resultsEl.innerHTML = rows.map(c => `
+      <a class="search-result-item" href="composition.html?id=${c.composition_id}">
+        <span class="search-result-title">${c.title || '—'}</span>
+        <span class="search-result-meta">Pl. ${c.plate_number}${c.year_issued ? ' · ' + c.year_issued : ''}</span>
       </a>`).join('');
   } catch(e) {
     resultsEl.innerHTML = '<div class="search-empty">Søkefeil</div>';
@@ -646,7 +654,8 @@ async function doSearch(query) {
 document.addEventListener('click', e => {
   if (!e.target.closest('.header-search')) {
     document.getElementById('searchResults').style.display = 'none';
-    document.getElementById('publisherSearchResults').style.display = 'none';
+    if(document.getElementById('plateSearchResults')) document.getElementById('plateSearchResults').style.display = 'none';
+    document.getElementById('plateSearchResults').style.display = 'none';
   }
 });
 
