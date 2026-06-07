@@ -58,11 +58,29 @@
 
   /* ── Search bar in header ── */
   .header-search {
-    max-width: 500px;
+    max-width: 860px;
     margin: 0 auto 1.2rem;
     padding: 0 1rem;
+    display: flex;
+    gap: 0.75rem;
   }
-  .search-wrap { position: relative; }
+  .search-wrap {
+    position: relative;
+    flex: 2;
+  }
+  .search-wrap-publisher {
+    position: relative;
+    flex: 1;
+  }
+  .search-label {
+    display: block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+    padding-left: 0.25rem;
+  }
   .search-input {
     width: 100%;
     padding: 0.6rem 1rem 0.6rem 2.5rem;
@@ -517,6 +535,38 @@ function renderPublishersError() {
 
 // ── Search ────────────────────────────────────────────────────────────────────
 let _searchTimeout = null;
+let _publisherSearchTimeout = null;
+
+function handlePublisherSearch(query) {
+  clearTimeout(_publisherSearchTimeout);
+  const resultsEl = document.getElementById('publisherSearchResults');
+  if (!query.trim()) { resultsEl.style.display = 'none'; return; }
+  _publisherSearchTimeout = setTimeout(() => doPublisherSearch(query.trim()), 280);
+}
+
+async function doPublisherSearch(query) {
+  const resultsEl = document.getElementById('publisherSearchResults');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div class="search-empty">Søker…</div>';
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/publisher?publisher_name=ilike.*${encodeURIComponent(query)}*&select=publisher_id,publisher_name,city&order=publisher_name.asc&limit=8`,
+      { headers: H }
+    );
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) {
+      resultsEl.innerHTML = '<div class="search-empty">Ingen treff</div>';
+      return;
+    }
+    resultsEl.innerHTML = rows.map(p => `
+      <a class="search-result-item" href="publisher.html?id=${p.publisher_id}">
+        <span class="search-result-title">${p.publisher_name || '—'}</span>
+        <span class="search-result-meta">${p.city || ''}</span>
+      </a>`).join('');
+  } catch(e) {
+    resultsEl.innerHTML = '<div class="search-empty">Søkefeil</div>';
+  }
+}
 
 function handleSearch(query) {
   clearTimeout(_searchTimeout);
@@ -594,8 +644,10 @@ async function doSearch(query) {
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('.header-search'))
+  if (!e.target.closest('.header-search')) {
     document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('publisherSearchResults').style.display = 'none';
+  }
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
