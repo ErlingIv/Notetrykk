@@ -213,7 +213,7 @@ function toggleRawSource() {
   btn.classList.toggle('open', open);
 }
 
-
+async function load() {
   const el = document.getElementById('content');
   if (!compId) { el.innerHTML = '<p class="error-state">Ingen komposisjons-ID angitt.</p>'; return; }
 
