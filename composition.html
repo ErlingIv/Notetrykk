@@ -148,6 +148,42 @@
 
   .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
   .error-state   { color: #a32d2d; font-size: 0.9rem; padding: 1.5rem 0; }
+
+  /* ── Raw source ── */
+  .raw-source-toggle {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: none; border: none; cursor: pointer;
+    font-family: var(--serif); font-size: 1.1rem; font-weight: 500;
+    color: var(--muted); padding: 0 0 0.5rem;
+    width: 100%; text-align: left;
+    border-bottom: 1px solid var(--border); margin-bottom: 0.75rem;
+    transition: color 0.15s;
+  }
+  .raw-source-toggle:hover { color: var(--ink); }
+  .raw-source-toggle .chevron {
+    font-size: 0.7rem; transition: transform 0.2s; margin-left: auto;
+    color: var(--muted);
+  }
+  .raw-source-toggle.open .chevron { transform: rotate(180deg); }
+  .raw-source-body { display: none; }
+  .raw-source-body.open { display: block; }
+  .raw-source-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem;
+    background: var(--paper); border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden;
+  }
+  .raw-source-table tr { border-bottom: 1px solid var(--faint); }
+  .raw-source-table tr:last-child { border-bottom: none; }
+  .raw-source-table td {
+    padding: 0.45rem 0.8rem; vertical-align: top; line-height: 1.5;
+  }
+  .raw-source-table td.rs-key {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 500; white-space: nowrap; width: 7rem;
+    background: var(--bg); border-right: 1px solid var(--faint);
+  }
+  .raw-source-table td.rs-val { color: var(--ink); word-break: break-word; }
+  .raw-source-table td.rs-val.empty { color: var(--muted); font-style: italic; }
 </style>
 </head>
 <body>
@@ -169,7 +205,15 @@ const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 const params = new URLSearchParams(window.location.search);
 const compId = params.get('id');
 
-async function load() {
+function toggleRawSource() {
+  const btn  = document.getElementById('rsToggle');
+  const body = document.getElementById('rsBody');
+  if (!btn || !body) return;
+  const open = body.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+
   const el = document.getElementById('content');
   if (!compId) { el.innerHTML = '<p class="error-state">Ingen komposisjons-ID angitt.</p>'; return; }
 
@@ -315,6 +359,40 @@ async function load() {
       <div class="section-heading">Kommentarer</div>
       <div class="notes-block">${escHtml(comp.composition_notes).replace(/\n/g,'<br>')}</div>` : '';
 
+    // Raw source
+    const RAW_LABELS = {
+      Person:        'Person',
+      Rolle:         'Rolle',
+      Tittel:        'Tittel',
+      Besetning:     'Besetning',
+      Forlag:        'Forlag',
+      Platenr:       'Platenr',
+      'Utgivelsesår':'Utgivelsesår',
+      Måned:         'Måned',
+      Periodikum:    'Periodikum',
+    };
+    const rawSrc = comp.raw_source;
+    const rawSourceHtml = rawSrc ? (() => {
+      const rows = Object.entries(RAW_LABELS).map(([key, label]) => {
+        const val = rawSrc[key];
+        const isEmpty = val === null || val === undefined || val === '';
+        return `<tr>
+          <td class="rs-key">${label}</td>
+          <td class="rs-val${isEmpty ? ' empty' : ''}">${isEmpty ? '—' : escHtml(String(val))}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div style="margin-bottom:1.5rem">
+          <button class="raw-source-toggle" id="rsToggle" onclick="toggleRawSource()">
+            Kildedata (råoppføring)
+            <span class="chevron">▼</span>
+          </button>
+          <div class="raw-source-body" id="rsBody">
+            <table class="raw-source-table">${rows}</table>
+          </div>
+        </div>`;
+    })() : '';
+
     el.innerHTML = `
       <div class="comp-hero">
         <div class="comp-id">Komposisjon #${comp.composition_id}</div>
@@ -332,6 +410,7 @@ async function load() {
       ${peopleHtml}
       ${periodicalHtml}
       ${notesHtml}
+      ${rawSourceHtml}
     `;
 
   } catch(e) {
