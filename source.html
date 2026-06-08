@@ -271,13 +271,10 @@ async function load() {
     let rows = [], offset = 0;
     while (true) {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/source_import?select=*&order=id.asc&limit=1000&offset=${offset}`,
+        `${SUPABASE_URL}/rest/v1/source_import?select=*&order=source_id.asc&limit=1000&offset=${offset}`,
         { headers: H }
       );
       const batch = await r.json();
-      if (!r.ok) {
-        throw new Error(`Supabase feil ${r.status}: ${batch.message || batch.hint || JSON.stringify(batch)}`);
-      }
       if (!Array.isArray(batch) || !batch.length) break;
       rows = rows.concat(batch);
       if (batch.length < 1000) break;
@@ -295,7 +292,7 @@ async function load() {
 // ── Filters ───────────────────────────────────────────────────────────────────
 function buildFilters() {
   const years = [...new Set(allRows.map(r => {
-    const y = r.utgivelsesaar || '';
+    const y = r.aar || '';
     return y.match(/^\d{4}$/) ? y : (y.match(/^(\d{4})/)?.[1] || '');
   }).filter(Boolean))].sort();
 
@@ -319,7 +316,7 @@ function applyFilters() {
   const beset  = document.getElementById('besetningFilter').value;
 
   filtered = allRows.filter(r => {
-    if (year   && !(r.utgivelsesaar || '').startsWith(year))   return false;
+    if (year   && !(r.aar || '').startsWith(year))   return false;
     if (forlag && r.forlag !== forlag)                          return false;
     if (beset  && r.besetning !== beset)                        return false;
     if (q) {
@@ -334,12 +331,12 @@ function applyFilters() {
   filtered.sort((a, b) => {
     let va, vb;
     switch(sortKey) {
-      case 'id':         va = a.id;                       vb = b.id; break;
+      case 'id':         va = a.source_id;                       vb = b.source_id; break;
       case 'person':     va = a.person || '';             vb = b.person || ''; break;
       case 'tittel':     va = a.tittel || '';             vb = b.tittel || ''; break;
       case 'forlag':     va = a.forlag || '';             vb = b.forlag || ''; break;
-      case 'year':       va = a.utgivelsesaar || '';      vb = b.utgivelsesaar || ''; break;
-      default:           va = a.id;                       vb = b.id;
+      case 'year':       va = a.aar || '';      vb = b.aar || ''; break;
+      default:           va = a.source_id;                       vb = b.source_id;
     }
     if (typeof va === 'number') return sortDir === 'asc' ? va - vb : vb - va;
     return sortDir === 'asc' ? String(va).localeCompare(String(vb), 'no') : String(vb).localeCompare(String(va), 'no');
@@ -399,8 +396,8 @@ function renderTable() {
     const rolleHtml = r.rolle
       ? `<div class="rolle-val">${esc(r.rolle)}</div>` : '';
 
-    return `<tr class="data-row" data-id="${r.id}">
-      <td class="id-cell">${r.id}</td>
+    return `<tr class="data-row" data-id="${r.source_id}">
+      <td class="id-cell">${r.source_id}</td>
       <td class="person-cell">
         <div class="person-name">${esc(r.person || '—')}</div>
         ${rolleHtml}
@@ -409,7 +406,7 @@ function renderTable() {
       <td class="besetning-cell">${bHtml || '<span style="color:var(--muted);font-size:0.75rem">—</span>'}</td>
       <td class="forlag-cell hide-sm">${esc(r.forlag || '—')}</td>
       <td class="platenr-cell hide-sm">${esc(r.platenr || '—')}</td>
-      <td class="year-cell">${esc(r.utgivelsesaar || '—')}</td>
+      <td class="year-cell">${esc(r.aar || '—')}</td>
       <td class="maaned-cell hide-sm">${esc(r.maaned || '')}</td>
       <td class="periodikum-cell hide-sm">${esc(r.periodikum || '')}</td>
       <td class="kommentar-cell hide-sm">${esc(r.kommentar || '')}</td>
@@ -477,20 +474,20 @@ function renderPagination() {
 
 // ── Drawer ────────────────────────────────────────────────────────────────────
 function openDrawer(id) {
-  const row = allRows.find(r => r.id === id);
+  const row = allRows.find(r => r.source_id === id);
   if (!row) return;
 
   document.getElementById('drawerTitle').textContent = row.tittel || '—';
 
   const fields = [
-    ['ID',            row.id],
+    ['ID',            row.source_id],
     ['Person',        row.person],
     ['Rolle',         row.rolle],
     ['Tittel',        row.tittel],
     ['Besetning',     row.besetning],
     ['Forlag',        row.forlag],
     ['Platenr',       row.platenr],
-    ['Utgivelsesår',  row.utgivelsesaar],
+    ['Utgivelsesår',  row.aar],
     ['Måned',         row.maaned],
     ['Periodikum',    row.periodikum],
     ['Kommentar',     row.kommentar],
