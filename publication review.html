@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gjennomgang — Norske Notetrykk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f4ee;--paper:#fffef9;--ink:#1a1814;--muted:#7a7060;--faint:#e8e2d4;--accent:#8b3a1e;--accent2:#2a5c45;--border:#d4cdc0;--serif:'Playfair Display',Georgia,serif;--body:'Source Serif 4',Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+.app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+.left{background:var(--paper);border-right:1px solid var(--border);height:100vh;position:sticky;top:0;overflow:hidden;display:flex;flex-direction:column}
+.ph{padding:1.25rem;border-bottom:1px solid var(--border)}
+.pt{font-family:var(--serif);font-size:1rem;font-weight:700;margin-bottom:.75rem}
+.pt span{color:var(--accent)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.sf{grid-column:1/-1}
+.sl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.2rem}
+.si{width:100%;font-family:var(--body);font-size:.8rem;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:.4rem .6rem;outline:none}
+.si:focus{border-color:var(--accent)}
+.sa{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.btn{font-family:var(--body);font-size:.75rem;cursor:pointer;padding:.4rem .8rem;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.bp{background:var(--accent);color:#fff;border-color:var(--accent)}
+.bp:hover{background:#7a3018;color:#fff}
+.rc{font-size:.72rem;color:var(--muted);padding:.4rem 1.25rem;border-bottom:1px solid var(--faint)}
+.rl{overflow-y:auto;flex:1}
+.ri{padding:.7rem 1.25rem;border-bottom:1px solid var(--faint);cursor:pointer}
+.ri:hover{background:var(--bg)}
+.ri.active{background:#f0ece6;border-left:3px solid var(--accent);padding-left:calc(1.25rem - 3px)}
+.ri.edited{border-left:3px solid var(--accent2);padding-left:calc(1.25rem - 3px)}
+.rid{font-size:.68rem;color:var(--muted)}
+.rti{font-family:var(--serif);font-size:.88rem;font-weight:500;line-height:1.3}
+.rm{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.es{padding:2rem 1.25rem;color:var(--muted);font-size:.85rem;font-style:italic;text-align:center}
+.lm{padding:1rem 1.25rem;color:var(--muted);font-size:.82rem;font-style:italic}
+.right{overflow-y:auto;padding:1.5rem 2rem 4rem}
+.ns{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--muted);font-size:.9rem;font-style:italic}
+.dh{margin-bottom:1.25rem}
+.did{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.dtd{font-family:var(--serif);font-size:clamp(1.3rem,2.5vw,1.8rem);font-weight:700;line-height:1.2}
+.dsd{font-family:var(--serif);font-size:1rem;font-style:italic;color:var(--muted);margin-top:.2rem}
+.eb{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;padding:2px 8px;border-radius:3px;background:#e8f0ea;color:var(--accent2);border:1px solid var(--accent2);margin-top:.5rem}
+.es2{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem}
+.est{font-family:var(--serif);font-size:.95rem;font-weight:500;color:var(--ink);margin-bottom:.9rem;padding-bottom:.5rem;border-bottom:1px solid var(--faint)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.ff{grid-column:1/-1}
+.fgr{display:flex;flex-direction:column;gap:.25rem}
+.fl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.fi,.fs,.ft{font-family:var(--body);font-size:.85rem;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:.45rem .6rem;outline:none;width:100%}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent)}
+.ft{resize:vertical;min-height:70px;line-height:1.5}
+.fi:disabled{color:var(--muted)}
+.fi.ch,.fs.ch,.ft.ch{border-color:var(--accent2);background:#e8f0ea}
+.pb{border:1px solid var(--border);border-radius:6px;margin-bottom:.6rem;overflow:hidden}
+.pb.ur{border-color:#c8a84b}
+.pbh{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem .75rem;background:var(--bg)}
+.pb.ur .pbh{background:#fdf6e3}
+.pnd{font-family:var(--serif);font-size:.88rem;font-weight:500}
+.pca{font-size:.72rem;color:var(--muted);font-style:italic;margin-top:1px}
+.pul{font-size:.78rem;color:#7a5c2a}
+.pno{font-size:.7rem;color:var(--muted);font-style:italic}
+.rb{font-size:.65rem;padding:2px 7px;border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--paper);white-space:nowrap;flex-shrink:0}
+.pa{display:flex;gap:.4rem;flex-shrink:0}
+.bts{font-family:var(--body);font-size:.68rem;cursor:pointer;padding:.25rem .55rem;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.bts:hover{border-color:var(--accent);color:var(--accent)}
+.btp{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btp:hover{background:#7a3018;color:#fff}
+.pep{border-top:1px solid var(--border);padding:.75rem;background:var(--paper);display:none}
+.pep.open{display:block}
+.psw{position:relative}
+.psr{position:absolute;top:100%;left:0;right:0;z-index:20;background:var(--paper);border:1px solid var(--border);border-top:none;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.08);display:none}
+.psi{padding:.45rem .65rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid var(--faint)}
+.psi:last-child{border-bottom:none}
+.psi:hover{background:var(--bg)}
+.psi.cn{color:var(--accent2);font-style:italic}
+.pnf{margin-top:.6rem;display:none}
+.pnf.open{display:block}
+.png{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.pna{display:flex;gap:.5rem;margin-top:.5rem}
+.eh{font-size:.7rem;color:var(--muted);margin-bottom:.5rem}
+.rt{display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;width:100%;font-family:var(--body);font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.6rem 0;border-top:1px solid var(--faint);margin-top:.5rem}
+.rt:hover{color:var(--ink)}
+.rb2{display:none;margin-top:.5rem}
+.rb2.open{display:block}
+.rtb{width:100%;border-collapse:collapse;font-size:.78rem}
+.rtb tr{border-bottom:1px solid var(--faint)}
+.rtb tr:last-child{border-bottom:none}
+.rtb td{padding:.35rem .5rem;vertical-align:top}
+.rtb td.rk{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap;width:8rem;background:var(--bg);border-right:1px solid var(--faint)}
+.rtb td.rv{color:var(--ink);word-break:break-word}
+.rtb td.rv.em{color:var(--muted);font-style:italic}
+.sb{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--border);padding:.75rem 2rem;display:flex;align-items:center;gap:1rem;margin:0 -2rem -4rem;z-index:10}
+.ss{font-size:.78rem;color:var(--muted);flex:1}
+.ss.ok{color:var(--accent2)}
+.ss.er{color:var(--accent)}
+.bs{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.bs:hover{background:#1e4a35;color:#fff}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:#fff;font-size:.82rem;padding:.6rem 1.2rem;border-radius:4px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.err{background:var(--accent)}
+#db{background:#111;color:#9f9;font-size:.72rem;padding:.35rem 1rem;font-family:monospace;position:fixed;bottom:0;left:0;right:0;z-index:200}
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;left:0;right:0;z-index:999;background:#c00;color:#fff;padding:8px;font-family:monospace;font-size:13px;display:flex;gap:10px;align-items:center">
+  <span id="js-status">JS NOT RUNNING</span>
+  <button onclick="document.getElementById('js-status').textContent='JS OK - onclick works'; document.getElementById('s-title').value='';" style="background:#fff;color:#000;border:none;padding:4px 8px;cursor:pointer">Test JS</button>
+</div>
+<script>document.getElementById('js-status').textContent='JS running (inline script)';</script>
+<div class="app">
+<div class="left">
+  <div class="ph">
+    <div class="pt">Norske Notetrykk <span>/ Gjennomgang</span></div>
+    <div class="sg">
+      <div class="sf"><label class="sl">Tittel</label><input class="si" id="s-title" placeholder="Søk i tittel..." autocomplete="off"></div>
+      <div><label class="sl">ID</label><input class="si" id="s-id" placeholder="42" type="number"></div>
+      <div><label class="sl">År</label><input class="si" id="s-year" placeholder="1860"></div>
+      <div><label class="sl">Forlag</label><input class="si" id="s-publisher" placeholder="Warmuth..."></div>
+      <div><label class="sl">Person</label><input class="si" id="s-person" placeholder="Grieg..."></div>
+    </div>
+    <div class="sa">
+      <button class="btn bp" id="btn-search">Sok</button>
+      <button class="btn" id="btn-clear">Nullstill</button>
+      <button class="btn" id="btn-unresolved">Uloste lyrikere</button>
+    </div>
+  </div>
+  <div class="rc" id="rc">—</div>
+  <div class="rl" id="rl"><div class="es">Bruk sokefeltet.</div></div>
+</div>
+<div class="right" id="rp"><div class="ns">Velg en publikasjon til venstre.</div></div>
+</div>
+<div class="toast" id="toast"></div>
+<div id="db">Init...</div>
+
+<script>
+var URL_ = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+var KEY_ = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+var HEAD = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_ };
+var HEAD_W = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+var currentPub = null, currentPP = [], currentPI = [];
+var publishers = {}, instrs = {}, roles_ = {}, changed = {};
+
+function db(m) { document.getElementById('db').textContent = m; console.log(m); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(m, e) { var t=document.getElementById('toast'); t.textContent=m; t.className='toast show'+(e?' err':''); setTimeout(function(){t.classList.remove('show');},3000); }
+
+function formatYear(p) {
+  if (!p.year_issued) return '—';
+  if (p.year_qualifier==='range' && p.year_issued_end) return p.year_issued+'–'+p.year_issued_end;
+  if (p.year_qualifier==='circa') return 'ca. '+p.year_issued;
+  if (p.year_qualifier==='before') return 'f. '+p.year_issued;
+  if (p.year_qualifier==='decade') return p.year_issued+'0-ara';
+  return String(p.year_issued);
+}
+
+function get(path) {
+  db('GET '+path.substring(0,80));
+  return fetch(URL_+path, {headers:HEAD}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
+  });
+}
+function patch(path, body) {
+  db('PATCH '+path.substring(0,80));
+  return fetch(URL_+path, {method:'PATCH', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
+  });
+}
+function post(path, body) {
+  db('POST '+path.substring(0,80));
+  return fetch(URL_+path, {method:'POST', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
+  });
+}
+
+function loadRefs() {
+  db('Loading refs...');
+  return Promise.all([
+    get('/rest/v1/publisher?select=publisher_id,publisher_name&limit=1000'),
+    get('/rest/v1/instrumentation?select=instrumentation_id,legacy_code,description_no&limit=500'),
+    get('/rest/v1/role?select=role_id,role_name&limit=100')
+  ]).then(function(res) {
+    res[0].forEach(function(p){publishers[p.publisher_id]=p.publisher_name;});
+    res[1].forEach(function(i){instrs[i.instrumentation_id]=i;});
+    res[2].forEach(function(r){roles_[r.role_id]=r.role_name;});
+    db('Refs OK: '+res[0].length+' publishers, '+res[2].length+' roles');
+  }).catch(function(e){ db('Refs FAILED: '+e.message); });
+}
+
+function doSearch(unresolvedOnly) {
+  var title = document.getElementById('s-title').value.trim();
+  var id    = document.getElementById('s-id').value.trim();
+  var year  = document.getElementById('s-year').value.trim();
+  var pubQ  = document.getElementById('s-publisher').value.trim();
+  var perQ  = document.getElementById('s-person').value.trim();
+
+  document.getElementById('rc').textContent = 'Soker...';
+  document.getElementById('rl').innerHTML = '<div class="lm">Laster...</div>';
+
+  var chain = Promise.resolve({filters:[]});
+
+  if (pubQ) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/publisher?publisher_name=ilike.*'+encodeURIComponent(pubQ)+'*&select=publisher_id').then(function(rows) {
+        if (!rows || !rows.length) throw new Error('NORESULTS');
+        ctx.filters.push('publisher_id=in.('+rows.map(function(p){return p.publisher_id;}).join(',')+')');
+        return ctx;
+      });
+    });
+  }
+
+  if (perQ) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/person?or=(last_name.ilike.*'+encodeURIComponent(perQ)+'*,display_name.ilike.*'+encodeURIComponent(perQ)+'*)&select=person_id&limit=200').then(function(pers) {
+        if (!pers || !pers.length) throw new Error('NORESULTS');
+        return get('/rest/v1/publication_person?person_id=in.('+pers.map(function(p){return p.person_id;}).join(',')+')'+'&select=publication_id&limit=2000').then(function(pp) {
+          var ids = [];
+          var seen = {};
+          (pp||[]).forEach(function(r){if(!seen[r.publication_id]){seen[r.publication_id]=1;ids.push(r.publication_id);}});
+          if (!ids.length) throw new Error('NORESULTS');
+          ctx.filters.push('publication_id=in.('+ids.join(',')+')');
+          return ctx;
+        });
+      });
+    });
+  }
+
+  if (unresolvedOnly) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/publication_person?person_id=is.null&notes=eq.Extracted%20from%20title&select=publication_id&limit=2000').then(function(rows) {
+        var ids = [];
+        var seen = {};
+        (rows||[]).forEach(function(r){if(!seen[r.publication_id]){seen[r.publication_id]=1;ids.push(r.publication_id);}});
+        if (!ids.length) throw new Error('NORESULTS');
+        ctx.filters.push('publication_id=in.('+ids.join(',')+')');
+        return ctx;
+      });
+    });
+  }
+
+  chain.then(function(ctx) {
+    var f = ctx.filters.slice();
+    if (id)    f.push('publication_id=eq.'+id);
+    if (title) f.push('title=ilike.*'+encodeURIComponent(title)+'*');
+    if (year)  f.push('year_issued=eq.'+year);
+    var qs = f.length ? f.join('&') : 'publication_id=gt.0';
+    return get('/rest/v1/publication?'+qs+'&select=publication_id,title,subtitle,year_issued,year_issued_end,year_qualifier,publisher_id,plate_number,is_edited&order=year_issued.asc,title.asc&limit=200');
+  }).then(function(rows) {
+    showResults(rows||[]);
+  }).catch(function(e) {
+    if (e.message === 'NORESULTS') { showResults([]); return; }
+    db('Search error: '+e.message);
+    document.getElementById('rc').textContent = 'Feil';
+    document.getElementById('rl').innerHTML = '<div class="es">'+esc(e.message)+'</div>';
+  });
+}
+
+function clearSearch() {
+  ['s-title','s-id','s-year','s-publisher','s-person'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('rl').innerHTML = '<div class="es">Bruk sokefeltet.</div>';
+  document.getElementById('rc').textContent = '—';
+}
+
+function showResults(rows) {
+  document.getElementById('rc').textContent = rows.length === 0 ? 'Ingen treff' : rows.length >= 200 ? '200+ treff' : rows.length+' treff';
+  if (!rows.length) { document.getElementById('rl').innerHTML='<div class="es">Ingen treff.</div>'; return; }
+  document.getElementById('rl').innerHTML = rows.map(function(p) {
+    return '<div class="ri'+(p.is_edited?' edited':'')+'" data-id="'+p.publication_id+'">'
+      +'<div class="rid">#'+p.publication_id+'</div>'
+      +'<div class="rti">'+esc(p.title||'—')+'</div>'
+      +'<div class="rm">'+esc(publishers[p.publisher_id]||'—')+' · '+formatYear(p)+(p.plate_number?' · pl. '+esc(p.plate_number):'')+' </div>'
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('.ri').forEach(function(el){
+    el.addEventListener('click', function(){loadDetail(parseInt(el.dataset.id));});
+  });
+}
+
+function loadDetail(pubId) {
+  document.querySelectorAll('.ri').forEach(function(el){el.classList.toggle('active',parseInt(el.dataset.id)===pubId);});
+  document.getElementById('rp').innerHTML = '<div class="lm" style="padding:2rem">Laster...</div>';
+  changed = {};
+  db('Loading pub #'+pubId);
+
+  Promise.all([
+    get('/rest/v1/publication?publication_id=eq.'+pubId+'&select=*'),
+    get('/rest/v1/publication_person?publication_id=eq.'+pubId+'&select=*&order=sequence_no.asc'),
+    get('/rest/v1/publication_instrumentation?publication_id=eq.'+pubId+'&select=*')
+  ]).then(function(res) {
+    var pub = (res[0]||[])[0];
+    if (!pub) throw new Error('Ikke funnet');
+    currentPub = pub; currentPP = res[1]||[]; currentPI = res[2]||[];
+    return Promise.all([
+      get('/rest/v1/source_import?source_id=eq.'+pub.primary_source_id+'&select=*'),
+      (function(){
+        var ids = currentPP.map(function(r){return r.person_id;}).filter(Boolean);
+        return ids.length ? get('/rest/v1/person?person_id=in.('+ids.join(',')+')'+'&select=person_id,display_name,last_name,first_name') : Promise.resolve([]);
+      })()
+    ]);
+  }).then(function(res2) {
+    var src = (res2[0]||[])[0];
+    var pd = {};
+    (res2[1]||[]).forEach(function(p){pd[p.person_id]=p;});
+    renderDetail(currentPub, currentPP, currentPI, src, pd);
+  }).catch(function(e){
+    db('Detail error: '+e.message);
+    document.getElementById('rp').innerHTML = '<div class="ns">Feil: '+esc(e.message)+'</div>';
+  });
+}
+
+function renderDetail(pub, pp, pi, src, pd) {
+  var piRow = pi[0];
+  var pubOpts = Object.entries(publishers).sort(function(a,b){return a[1].localeCompare(b[1],'no');}).map(function(e){return '<option value="'+e[0]+'"'+(e[0]==pub.publisher_id?' selected':'')+'>'+esc(e[1])+'</option>';}).join('');
+  var instrOpts = '<option value="">—</option>'+Object.entries(instrs).sort(function(a,b){return a[1].legacy_code.localeCompare(b[1].legacy_code);}).map(function(e){var sel=(piRow&&String(piRow.instrumentation_id)===String(e[0]))?' selected':'';return '<option value="'+e[0]+'"'+sel+'>'+esc(e[1].legacy_code)+' — '+esc(e[1].description_no)+'</option>';}).join('');
+  var qOpts = ['exact','circa','before','decade','range'].map(function(q){return '<option value="'+q+'"'+(pub.year_qualifier===q?' selected':'')+'>'+q+'</option>';}).join('');
+
+  var ppHtml = pp.length ? pp.map(function(row){
+    var p = row.person_id ? pd[row.person_id] : null;
+    var nm = p ? (p.display_name || [p.last_name,p.first_name].filter(Boolean).join(', ')) : null;
+    var rn = row.role_id ? (roles_[row.role_id]||'role '+row.role_id) : '—';
+    var ur = !row.person_id;
+    var pid = row.publication_person_id;
+    return '<div class="pb'+(ur?' ur':'')+'" id="pb'+pid+'">'
+      +'<div class="pbh">'
+        +'<div style="flex:1;min-width:0">'
+          +(ur?'<div class="pul">&#9888; Ukjent — kreditert som: '+esc(row.credited_as||'')+'</div>'
+              :'<div class="pnd">'+esc(nm||'—')+'</div>')
+          +(row.credited_as&&!ur?'<div class="pca">Kreditert: '+esc(row.credited_as)+'</div>':'')
+          +(row.notes?'<div class="pno">'+esc(row.notes)+'</div>':'')
+        +'</div>'
+        +'<span class="rb">'+esc(rn)+'</span>'
+        +'<div class="pa">'
+          +(!ur?'<button class="bts" id="pedit'+pid+'">Rediger</button>':'')
+          +'<button class="bts'+(ur?' btp':'')+'" id="plink'+pid+'">'+(ur?'Tilknytt':'Bytt')+'</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="pep" id="pep'+pid+'">'
+        +'<div class="eh">Sok etter eksisterende person, eller opprett ny.</div>'
+        +'<div class="psw">'
+          +'<input class="fi" id="ps'+pid+'" placeholder="Sok person (etternavn)..." autocomplete="off">'
+          +'<div class="psr" id="psr'+pid+'"></div>'
+        +'</div>'
+        +'<div class="pnf" id="pnf'+pid+'">'
+          +'<div class="png">'
+            +'<div class="fgr"><label class="fl">Etternavn *</label><input class="fi" id="pl'+pid+'" placeholder="Etternavn"></div>'
+            +'<div class="fgr"><label class="fl">Fornavn</label><input class="fi" id="pf'+pid+'" placeholder="Fornavn"></div>'
+            +'<div class="fgr"><label class="fl">Type</label><select class="fs" id="pt'+pid+'"><option value="person">person</option><option value="anon">anon</option><option value="collection">collection</option></select></div>'
+            +'<div class="fgr"><label class="fl">Merknad</label><input class="fi" id="pn'+pid+'" placeholder="Merknad"></div>'
+          +'</div>'
+          +'<div class="pna">'
+            +'<button class="bts bs" id="pcreate'+pid+'">Opprett og tilknytt</button>'
+            +'<button class="bts" id="pcancel'+pid+'">Avbryt</button>'
+          +'</div>'
+        +'</div>'
+        +(p&&!ur?'<div style="margin-top:.75rem;border-top:1px solid var(--faint);padding-top:.75rem">'
+          +'<div class="eh">Rett navn pa tilknyttet person ('+esc(nm)+'):</div>'
+          +'<div class="png">'
+            +'<div class="fgr"><label class="fl">Etternavn</label><input class="fi" id="eel'+pid+'" value="'+esc(p.last_name||'')+'"></div>'
+            +'<div class="fgr"><label class="fl">Fornavn</label><input class="fi" id="eef'+pid+'" value="'+esc(p.first_name||'')+'"></div>'
+          +'</div>'
+          +'<div class="pna">'
+            +'<button class="bts bs" id="esave'+pid+'">Lagre navn</button>'
+            +'<button class="bts" id="ecancel'+pid+'">Avbryt</button>'
+          +'</div>'
+        +'</div>':'')
+      +'</div>'
+    +'</div>';
+  }).join('') : '<div style="font-size:.82rem;color:var(--muted);font-style:italic">Ingen personer.</div>';
+
+  var rawFields = [['Person',src&&src.person_raw],['Rolle',src&&src.role_raw],['Tittel',src&&src.title_raw],['Besetning',src&&src.instrumentation_raw],['Forlag',src&&src.publisher_raw],['Platenr',src&&src.plate_number_raw],['Ar',src&&src.publication_year_raw],['Maned',src&&src.month_raw],['Periodikum',src&&src.periodical_raw],['Kommentar',src&&src.comment_raw]];
+  var rawHtml = rawFields.map(function(kv){var e=!kv[1]&&kv[1]!==0;return '<tr><td class="rk">'+esc(kv[0])+'</td><td class="rv'+(e?' em':'')+'">'+(e?'—':esc(String(kv[1])))+'</td></tr>';}).join('');
+
+  document.getElementById('rp').innerHTML =
+    '<div class="dh">'
+      +'<div class="did">Publikasjon #'+pub.publication_id+' · Kilde #'+pub.primary_source_id+'</div>'
+      +'<div class="dtd">'+esc(pub.title||'—')+'</div>'
+      +(pub.subtitle?'<div class="dsd">'+esc(pub.subtitle)+'</div>':'')
+      +(pub.is_edited?'<div class="eb">&#10003; Redigert</div>':'')
+    +'</div>'
+    +'<div class="es2"><div class="est">Tittel</div><div class="fg">'
+      +'<div class="fgr ff"><label class="fl">Tittel</label><input class="fi" id="f-title" data-field="title" value="'+esc(pub.title||'')+'"></div>'
+      +'<div class="fgr ff"><label class="fl">Undertittel</label><input class="fi" id="f-subtitle" data-field="subtitle" value="'+esc(pub.subtitle||'')+'"></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Utgivelse</div><div class="fg">'
+      +'<div class="fgr"><label class="fl">Forlag</label><select class="fs" id="f-pub" data-field="publisher_id"><option value="">—</option>'+pubOpts+'</select></div>'
+      +'<div class="fgr"><label class="fl">Platenummer</label><input class="fi" id="f-plate" data-field="plate_number" value="'+esc(pub.plate_number||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Ar</label><input class="fi" id="f-year" data-field="year_issued" type="number" value="'+(pub.year_issued||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Ar slutt</label><input class="fi" id="f-yend" data-field="year_issued_end" type="number" value="'+(pub.year_issued_end||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Arskvalifier</label><select class="fs" id="f-qual" data-field="year_qualifier">'+qOpts+'</select></div>'
+      +'<div class="fgr"><label class="fl">Maned</label><input class="fi" id="f-month" data-field="month" value="'+esc(pub.month||'')+'"></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Besetning</div><div class="fg">'
+      +'<div class="fgr ff"><label class="fl">Besetning</label><select class="fs" id="f-instr" data-field="_instr_id">'+instrOpts+'</select></div>'
+      +'<div class="fgr ff"><label class="fl">Ra besetningsstreng</label><input class="fi" value="'+esc(piRow&&piRow.raw_instrumentation||'')+'" disabled></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Kommentarer</div>'
+      +'<textarea class="ft" id="f-notes" data-field="composition_notes">'+esc(pub.composition_notes||'')+'</textarea>'
+    +'</div>'
+    +'<div class="es2"><div class="est">Personer</div>'+ppHtml+'</div>'
+    +'<div class="es2">'
+      +'<button class="rt" id="raw-btn">Kildedata (raoppforing) <span>&#9660;</span></button>'
+      +'<div class="rb2" id="raw-body"><table class="rtb">'+rawHtml+'</table></div>'
+    +'</div>'
+    +'<div class="sb">'
+      +'<span class="ss" id="ss">Ingen endringer</span>'
+      +'<button class="btn" id="btn-undo">Angre</button>'
+      +'<button class="btn bs" id="btn-save">Lagre endringer</button>'
+    +'</div>';
+
+  // Attach field change listeners
+  document.querySelectorAll('[data-field]').forEach(function(el){
+    el.addEventListener('input',  function(){fieldChange(el);});
+    el.addEventListener('change', function(){fieldChange(el);});
+  });
+
+  // Save / undo buttons
+  document.getElementById('btn-save').addEventListener('click', saveChanges);
+  document.getElementById('btn-undo').addEventListener('click', function(){loadDetail(pub.publication_id);});
+
+  // Raw toggle
+  document.getElementById('raw-btn').addEventListener('click', function(){document.getElementById('raw-body').classList.toggle('open');});
+
+  // Person buttons
+  pp.forEach(function(row){
+    var pid = row.publication_person_id;
+    var linkBtn = document.getElementById('plink'+pid);
+    var editBtn = document.getElementById('pedit'+pid);
+    var cancelBtn = document.getElementById('pcancel'+pid);
+    var createBtn = document.getElementById('pcreate'+pid);
+    var psInput = document.getElementById('ps'+pid);
+    var esaveBtn = document.getElementById('esave'+pid);
+    var ecancelBtn = document.getElementById('ecancel'+pid);
+
+    if (linkBtn) linkBtn.addEventListener('click', function(){togglePEP(pid, true);});
+    if (editBtn) editBtn.addEventListener('click', function(){togglePEP(pid, true);});
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){document.getElementById('pnf'+pid).classList.remove('open');});
+    if (psInput) psInput.addEventListener('input', function(){personSearch(pid, psInput.value);});
+    if (createBtn) createBtn.addEventListener('click', function(){createAndLink(pid);});
+    if (esaveBtn) esaveBtn.addEventListener('click', function(){savePersonName(row.person_id, pid);});
+    if (ecancelBtn) ecancelBtn.addEventListener('click', function(){togglePEP(pid, false);});
+  });
+
+  db('Detail rendered for pub #'+pub.publication_id);
+}
+
+function fieldChange(el) {
+  changed[el.dataset.field] = el.value;
+  el.classList.add('ch');
+  var ss = document.getElementById('ss');
+  if (ss) { ss.textContent = Object.keys(changed).length+' felt endret'; ss.className='ss'; }
+}
+
+function saveChanges() {
+  if (!currentPub || !Object.keys(changed).length) return;
+  var pubId = currentPub.publication_id;
+  var now = new Date().toISOString();
+  var ss = document.getElementById('ss');
+  ss.textContent = 'Lagrer...';
+  var instrId = changed['_instr_id'];
+  var patch_ = {};
+  Object.keys(changed).forEach(function(k){if(k[0]!=='_') patch_[k]=changed[k]===''?null:changed[k];});
+  var corr = currentPub.corrections || {};
+  Object.keys(patch_).forEach(function(f){corr[f]={original:currentPub[f]!=null?currentPub[f]:null,corrected:patch_[f],corrected_at:now.slice(0,10),corrected_by:'EI'};});
+  var chain = Object.keys(patch_).length
+    ? patch('/rest/v1/publication?publication_id=eq.'+pubId, Object.assign({},patch_,{is_edited:true,corrected_at:now,corrected_by:'EI',corrections:corr}))
+    : Promise.resolve();
+  if (instrId !== undefined && currentPI[0]) {
+    chain = chain.then(function(){
+      return patch('/rest/v1/publication_instrumentation?publication_instrumentation_id=eq.'+currentPI[0].publication_instrumentation_id, {instrumentation_id:instrId===''?null:parseInt(instrId),is_edited:true,corrected_at:now,corrected_by:'EI'});
+    });
+  }
+  chain.then(function(){
+    toast('Lagret');
+    changed = {};
+    loadDetail(pubId);
+    var ri = document.querySelector('.ri[data-id="'+pubId+'"]');
+    if (ri) ri.classList.add('edited');
+  }).catch(function(e){
+    ss.textContent='Feil: '+e.message; ss.className='ss er';
+    toast(e.message, true);
+  });
+}
+
+function togglePEP(pid, show) {
+  var el = document.getElementById('pep'+pid);
+  if (el) el.classList.toggle('open', show);
+}
+
+var psTimer = null;
+function personSearch(pid, q) {
+  clearTimeout(psTimer);
+  var el = document.getElementById('psr'+pid);
+  if (!q || q.length < 2) { el.style.display='none'; return; }
+  psTimer = setTimeout(function(){
+    get('/rest/v1/person?or=(last_name.ilike.*'+encodeURIComponent(q)+'*,display_name.ilike.*'+encodeURIComponent(q)+'*)&select=person_id,display_name,last_name,first_name&order=last_name.asc&limit=20').then(function(rows){
+      el.innerHTML = (rows||[]).map(function(p){
+        var nm = p.display_name || [p.last_name,p.first_name].filter(Boolean).join(', ');
+        return '<div class="psi" data-pid="'+p.person_id+'" data-nm="'+esc(nm)+'">'+esc(nm)+' <span style="color:var(--muted);font-size:.7rem">#'+p.person_id+'</span></div>';
+      }).join('')+'<div class="psi cn" data-new="1">+ Opprett ny: '+esc(q)+'</div>';
+      el.style.display='block';
+      el.querySelectorAll('.psi').forEach(function(item){
+        item.addEventListener('click', function(){
+          if (item.dataset.new) { showNewPersonForm(pid, q); return; }
+          linkPerson(pid, parseInt(item.dataset.pid), item.dataset.nm);
+        });
+      });
+    }).catch(function(e){db('Person search error: '+e.message);});
+  }, 250);
+}
+
+function showNewPersonForm(pid, q) {
+  document.getElementById('psr'+pid).style.display='none';
+  document.getElementById('pnf'+pid).classList.add('open');
+  var lastEl = document.getElementById('pl'+pid);
+  if (lastEl && q) lastEl.value = q;
+}
+
+function linkPerson(pid, personId, nm) {
+  document.getElementById('psr'+pid).style.display='none';
+  var now = new Date().toISOString();
+  patch('/rest/v1/publication_person?publication_person_id=eq.'+pid, {
+    person_id:personId, is_edited:true, corrected_at:now, corrected_by:'EI',
+    corrections:{person_id:{original:null,corrected:personId,corrected_at:now.slice(0,10),corrected_by:'EI'}}
+  }).then(function(){
+    toast('Tilknyttet: '+nm);
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
+}
+
+function createAndLink(pid) {
+  var last  = (document.getElementById('pl'+pid)||{}).value;
+  var first = (document.getElementById('pf'+pid)||{}).value;
+  var type_ = (document.getElementById('pt'+pid)||{}).value || 'person';
+  var notes = (document.getElementById('pn'+pid)||{}).value;
+  last  = last  ? last.trim()  : '';
+  first = first ? first.trim() : '';
+  notes = notes ? notes.trim() : '';
+  if (!last) { toast('Etternavn er pakrevd', true); return; }
+  var disp = first ? last+', '+first : last;
+  var now = new Date().toISOString();
+  post('/rest/v1/person', {last_name:last,first_name:first||null,display_name:disp,person_type:type_,notes:notes||null}).then(function(res){
+    var personId = res[0].person_id;
+    return patch('/rest/v1/publication_person?publication_person_id=eq.'+pid, {
+      person_id:personId, is_edited:true, corrected_at:now, corrected_by:'EI',
+      corrections:{person_id:{original:null,corrected:personId,corrected_at:now.slice(0,10),corrected_by:'EI'}}
+    });
+  }).then(function(){
+    toast('Opprettet og tilknyttet: '+disp);
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
+}
+
+function savePersonName(personId, pid) {
+  var last  = (document.getElementById('eel'+pid)||{}).value || '';
+  var first = (document.getElementById('eef'+pid)||{}).value || '';
+  last = last.trim(); first = first.trim();
+  if (!last) { toast('Etternavn er pakrevd', true); return; }
+  var disp = first ? last+', '+first : last;
+  var now = new Date().toISOString();
+  patch('/rest/v1/person?person_id=eq.'+personId, {last_name:last,first_name:first||null,display_name:disp,is_edited:true,corrected_at:now,corrected_by:'EI'}).then(function(){
+    toast('Navn lagret');
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
+}
+
+// Close person search on outside click
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.psw')) {
+    document.querySelectorAll('.psr').forEach(function(el){el.style.display='none';});
+  }
+});
+
+// Wire up main buttons
+document.getElementById('btn-search').addEventListener('click', function(){doSearch(false);});
+document.getElementById('btn-clear').addEventListener('click', clearSearch);
+document.getElementById('btn-unresolved').addEventListener('click', function(){doSearch(true);});
+document.querySelectorAll('.si').forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch(false);});});
+
+// Init
+db('Wiring done, loading refs...');
+loadRefs();
+</script>
+</body>
+</html>
