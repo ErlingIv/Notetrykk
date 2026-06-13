@@ -21,203 +21,42 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body { font-family: var(--body); background: var(--bg); color: var(--ink); min-height: 100vh; }
-
-  /* ── Header ── */
-  header {
-    background: var(--paper);
-    border-bottom: 2px solid var(--border);
-    padding: 2rem 2rem 0;
-    text-align: center;
-    position: relative;
-  }
-  .site-title {
-    font-family: var(--serif);
-    font-size: clamp(2rem, 5vw, 3.4rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    line-height: 1.05;
-  }
-  .site-subtitle {
-    font-family: var(--body);
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-top: 0.4rem;
-    font-weight: 300;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  .header-about {
-    font-family: var(--body);
-    font-size: 0.82rem;
-    font-style: italic;
-    color: var(--muted);
-    margin-top: 0.5rem;
-    margin-bottom: 1.2rem;
-  }
-
-  /* ── Search bar in header ── */
-  .header-search {
-    max-width: 860px;
-    margin: 0 auto 1.2rem;
-    padding: 0 1rem;
-    display: flex;
-    gap: 0.75rem;
-  }
-  .search-wrap {
-    position: relative;
-    flex: 2;
-  }
-  .search-wrap-publisher {
-    position: relative;
-    flex: 1;
-  }
-  .search-label {
-    display: block;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 0.25rem;
-    padding-left: 0.25rem;
-  }
-  .search-input {
-    width: 100%;
-    padding: 0.6rem 1rem 0.6rem 2.5rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg);
-    font-family: var(--body);
-    font-size: 0.95rem;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  header { background: var(--paper); border-bottom: 2px solid var(--border); padding: 2rem 2rem 0; text-align: center; position: relative; }
+  .site-title { font-family: var(--serif); font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1.05; }
+  .site-subtitle { font-family: var(--body); font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; }
+  .header-about { font-family: var(--body); font-size: 0.82rem; font-style: italic; color: var(--muted); margin-top: 0.5rem; margin-bottom: 1.2rem; }
+  .header-search { max-width: 860px; margin: 0 auto 1.2rem; padding: 0 1rem; display: flex; gap: 0.75rem; }
+  .search-wrap { position: relative; flex: 2; }
+  .search-wrap-publisher { position: relative; flex: 1; }
+  .search-label { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.25rem; padding-left: 0.25rem; }
+  .search-input { width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-family: var(--body); font-size: 0.95rem; color: var(--ink); outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--accent); background: var(--paper); }
-  .search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    pointer-events: none;
-  }
-  .search-results {
-    position: absolute;
-    left: 0; right: 0;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-top: 0.4rem;
-    overflow: hidden;
-    display: none;
-    z-index: 100;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  }
-  .search-result-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--faint);
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 0.1s;
-    color: inherit;
-  }
+  .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .search-results { position: absolute; left: 0; right: 0; background: var(--paper); border: 1px solid var(--border); border-radius: 8px; margin-top: 0.4rem; overflow: hidden; display: none; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .search-result-item { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1rem; border-bottom: 1px solid var(--faint); cursor: pointer; text-decoration: none; transition: background 0.1s; color: inherit; }
   .search-result-item:last-child { border-bottom: none; }
   .search-result-item:hover { background: var(--faint); }
   .search-result-title { font-family: var(--serif); font-size: 0.93rem; color: var(--ink); }
   .search-result-meta { font-size: 0.78rem; color: var(--muted); text-align: right; }
-  .search-section-label {
-    padding: 0.35rem 1rem;
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    background: var(--bg);
-    border-bottom: 1px solid var(--faint);
-  }
+  .search-section-label { padding: 0.35rem 1rem; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; background: var(--bg); border-bottom: 1px solid var(--faint); }
   .search-empty { padding: 1rem; text-align: center; color: var(--muted); font-size: 0.88rem; }
-
-  /* ── Nav tabs ── */
-  nav {
-    display: flex;
-    justify-content: center;
-    background: var(--paper);
-    border-bottom: 1px solid var(--border);
-  }
-  .tab {
-    padding: 0.9rem 2.5rem;
-    font-family: var(--body);
-    font-size: 0.88rem;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
-    white-space: nowrap;
-    user-select: none;
-  }
+  nav { display: flex; justify-content: center; background: var(--paper); border-bottom: 1px solid var(--border); }
+  .tab { padding: 0.9rem 2.5rem; font-family: var(--body); font-size: 0.88rem; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; white-space: nowrap; user-select: none; }
   .tab:hover { color: var(--ink); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  /* ── Main ── */
   main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
   .section-panel { display: none; }
   .section-panel.active { display: block; }
-
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
-  }
+  .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
   .section-title { font-family: var(--serif); font-size: 1.5rem; font-weight: 500; }
   .section-count { font-size: 0.82rem; color: var(--muted); }
-
-  /* ── Alpha bar ── */
   .alpha-bar { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 1.5rem; }
-  .alpha-btn {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.78rem;
-    font-family: var(--body);
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-transform: uppercase;
-  }
+  .alpha-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-family: var(--body); font-weight: 500; color: var(--muted); background: var(--paper); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
   .alpha-btn:hover { background: var(--faint); color: var(--ink); }
   .alpha-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .alpha-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
-
-  /* ── Composer grid ── */
-  .composer-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 0.6rem;
-  }
-  .composer-card {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--border);
-    border-radius: 6px;
-    padding: 0.7rem 0.9rem;
-    cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    text-decoration: none;
-    display: block;
-    color: inherit;
-  }
+  .composer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; }
+  .composer-card { background: var(--paper); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 6px; padding: 0.7rem 0.9rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-decoration: none; display: block; color: inherit; }
   .composer-card.tier-1 { border-left-color: #c8c0b0; }
   .composer-card.tier-2 { border-left-color: #c8902a; }
   .composer-card.tier-3 { border-left-color: #3a6ea8; }
@@ -226,114 +65,52 @@
   .composer-name { font-family: var(--serif); font-size: 0.95rem; font-weight: 500; color: var(--ink); line-height: 1.3; }
   .composer-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .score-count { font-size: 0.75rem; color: var(--accent2); }
-  .anon-badge {
-    font-size: 0.68rem; background: #f0ece4; color: #7a6a50;
-    border: 1px solid #d4c8b0; border-radius: 3px; padding: 1px 5px;
-  }
-
-  /* ── Letter group ── */
+  .anon-badge { font-size: 0.68rem; background: #f0ece4; color: #7a6a50; border: 1px solid #d4c8b0; border-radius: 3px; padding: 1px 5px; }
   .letter-group { margin-bottom: 1.5rem; }
-  .letter-heading {
-    font-family: var(--serif);
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--accent);
-    opacity: 0.6;
-    border-left: 3px solid var(--accent);
-    padding-left: 0.6rem;
-    margin-bottom: 0.6rem;
-    line-height: 1;
-  }
-
-  /* ── Publisher list ── */
+  .letter-heading { font-family: var(--serif); font-size: 1.6rem; font-weight: 700; color: var(--accent); opacity: 0.6; border-left: 3px solid var(--accent); padding-left: 0.6rem; margin-bottom: 0.6rem; line-height: 1; }
   .publisher-list { display: flex; flex-direction: column; gap: 0.5rem; }
-  .publisher-card {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--accent2);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    text-decoration: none;
-    color: inherit;
-  }
+  .publisher-card { background: var(--paper); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; text-decoration: none; color: inherit; }
   .publisher-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(139,58,30,0.08); }
   .publisher-card.is-self { border-left-color: #7a5c2a; }
   .publisher-card.is-unknown { border-left-color: #aaa; opacity: 0.7; }
   .publisher-name { font-family: var(--serif); font-size: 1rem; font-weight: 500; color: var(--ink); }
   .publisher-city { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
   .pub-count { font-size: 0.82rem; color: var(--accent2); white-space: nowrap; flex-shrink: 0; }
-  .pub-badge {
-    font-size: 0.68rem; padding: 2px 7px; border-radius: 3px;
-    border: 1px solid; letter-spacing: 0.03em;
-  }
+  .pub-badge { font-size: 0.68rem; padding: 2px 7px; border-radius: 3px; border: 1px solid; letter-spacing: 0.03em; }
   .pub-badge-self { background: #f5ede0; color: #7a5c2a; border-color: #d4b880; }
   .pub-badge-unknown { background: #f0f0f0; color: #888; border-color: #ccc; }
-
-  /* ── Loading ── */
   .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
-  .loading-dots::after {
-    content: '...';
-    animation: dots 1.2s steps(4, end) infinite;
-  }
-  @keyframes dots {
-    0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; }
-  }
-
-  /* ── Footer ── */
-  footer {
-    text-align: center;
-    padding: 1.5rem;
-    font-size: 0.78rem;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    letter-spacing: 0.04em;
-  }
+  .loading-dots::after { content: '...'; animation: dots 1.2s steps(4,end) infinite; }
+  @keyframes dots { 0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'} }
+  footer { text-align: center; padding: 1.5rem; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); letter-spacing: 0.04em; }
 </style>
 </head>
 <body>
-
 <header>
   <h1 class="site-title">Norske Notetrykk 1811–1908</h1>
   <p class="site-subtitle">Historisk musikkkatalog</p>
   <p class="header-about">Basert på Kari Michelsen's arbeid ved Universitetet i Oslo</p>
-
   <div class="header-search">
     <div class="search-wrap">
       <label class="search-label">Tittel / Komponist</label>
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" style="top:calc(50% + 10px)">
-        <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
-        <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <input class="search-input" id="globalSearch" type="text"
-             placeholder="Tittel eller komponist…"
-             oninput="handleSearch(this.value)" autocomplete="off">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" style="top:calc(50% + 10px)"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <input class="search-input" id="globalSearch" type="text" placeholder="Tittel eller komponist…" oninput="handleSearch(this.value)" autocomplete="off">
       <div class="search-results" id="searchResults"></div>
     </div>
     <div class="search-wrap-publisher">
       <label class="search-label">Platenummer</label>
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="top:calc(50% + 10px)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <input class="search-input" type="text" placeholder="Platenummer…"
-             oninput="handlePlateSearch(this.value)" autocomplete="off">
+      <input class="search-input" type="text" placeholder="Platenummer…" oninput="handlePlateSearch(this.value)" autocomplete="off">
       <div class="search-results" id="plateSearchResults"></div>
     </div>
   </div>
 </header>
-
 <nav>
   <div class="tab active" data-section="composers" onclick="switchTab('composers')">Komponister</div>
-  <div class="tab"        data-section="publishers" onclick="switchTab('publishers')">Forlag</div>
+  <div class="tab" data-section="publishers" onclick="switchTab('publishers')">Forlag</div>
   <a class="tab" href="source.html" style="text-decoration:none;">Kildedata</a>
 </nav>
-
 <main>
-
-  <!-- ── Composers panel ── -->
   <div class="section-panel active" id="panel-composers">
     <div class="section-header">
       <span class="section-title">Komponister</span>
@@ -342,8 +119,6 @@
     <div class="alpha-bar" id="alpha-composers"></div>
     <div id="composers-list"><div class="loading-state"><span class="loading-dots">Laster</span></div></div>
   </div>
-
-  <!-- ── Publishers panel ── -->
   <div class="section-panel" id="panel-publishers">
     <div class="section-header">
       <span class="section-title">Forlag</span>
@@ -351,26 +126,18 @@
     </div>
     <div id="publishers-list"><div class="loading-state"><span class="loading-dots">Laster</span></div></div>
   </div>
-
 </main>
-
-<footer>
-  Norske Notetrykk 1811–1908 · Kari Michelsen / Universitetet i Oslo
-</footer>
+<footer>Norske Notetrykk 1811–1908 · Kari Michelsen / Universitetet i Oslo</footer>
 
 <script>
-// ── CONFIG — replace with your catalogue project credentials ──────────────────
 const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
 const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let allComposers = [];
-let allPublishers = [];
-let activeLetter = 'ALL';
-let activeTab = 'composers';
+let allComposers = [], allPublishers = [], activeLetter = 'ALL', activeTab = 'composers';
+// role_id for Komponist — resolved on load
+let komponistRoleId = null;
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.section === tab));
@@ -378,38 +145,36 @@ function switchTab(tab) {
   document.getElementById(`panel-${tab}`).classList.add('active');
 }
 
-// ── Fetch composers ───────────────────────────────────────────────────────────
+async function fetchAll(path) {
+  let rows = [], offset = 0;
+  while (true) {
+    const sep = path.includes('?') ? '&' : '?';
+    const r = await fetch(`${SUPABASE_URL}${path}${sep}limit=1000&offset=${offset}`, { headers: H });
+    const batch = await r.json();
+    if (!Array.isArray(batch) || !batch.length) break;
+    rows = rows.concat(batch);
+    if (batch.length < 1000) break;
+    offset += 1000;
+  }
+  return rows;
+}
+
 async function fetchComposers() {
-  // Fetch all persons
-  let persons = [], offset = 0;
-  while (true) {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/person?select=person_id,last_name,first_name,born,person_type&order=last_name.asc&limit=1000&offset=${offset}`,
-      { headers: H }
-    );
-    const rows = await r.json();
-    if (!Array.isArray(rows) || !rows.length) break;
-    persons = persons.concat(rows);
-    if (rows.length < 1000) break;
-    offset += 1000;
-  }
+  // Get role_id for Komponist
+  const roles = await fetch(`${SUPABASE_URL}/rest/v1/role?role_name=eq.Komponist&select=role_id`, { headers: H }).then(r => r.json());
+  komponistRoleId = roles[0]?.role_id;
 
-  // Count compositions per person
+  const persons = await fetchAll('/rest/v1/person?select=person_id,last_name,first_name,person_type&order=last_name.asc');
+
+  // Count publications per person (as Komponist)
   const countMap = {};
-  offset = 0;
-  while (true) {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/composition_person?select=person_id&role=eq.Composer&limit=1000&offset=${offset}`,
-      { headers: H }
-    );
-    const rows = await r.json();
-    if (!Array.isArray(rows) || !rows.length) break;
-    rows.forEach(row => { countMap[row.person_id] = (countMap[row.person_id] || 0) + 1; });
-    if (rows.length < 1000) break;
-    offset += 1000;
+  if (komponistRoleId) {
+    const ppRows = await fetchAll(`/rest/v1/publication_person?role_id=eq.${komponistRoleId}&select=person_id`);
+    ppRows.forEach(r => { countMap[r.person_id] = (countMap[r.person_id] || 0) + 1; });
   }
 
-  allComposers = persons.map(p => ({ ...p, score_count: countMap[p.person_id] || 0 }))
+  allComposers = persons
+    .map(p => ({ ...p, score_count: countMap[p.person_id] || 0 }))
     .filter(p => p.score_count > 0 || p.person_type !== 'person');
 
   renderComposers();
@@ -420,20 +185,15 @@ function renderComposers() {
     ? allComposers
     : allComposers.filter(c => (c.last_name || '?')[0].toUpperCase() === activeLetter);
 
-  // Alpha bar
   const letters = [...new Set(allComposers.map(c => (c.last_name || '?')[0].toUpperCase()))].sort((a,b) => a.localeCompare(b,'no'));
-  const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ'.split('');
-  document.getElementById('alpha-composers').innerHTML = `
-    <div class="alpha-btn ${activeLetter === 'ALL' ? 'active' : ''}" onclick="setLetter('ALL')">Alle</div>
-    ${allLetters.map(l => `
-      <div class="alpha-btn ${!letters.includes(l) ? 'disabled' : ''} ${activeLetter === l ? 'active' : ''}"
-           onclick="setLetter('${l}')">${l}</div>`).join('')}
-  `;
+  document.getElementById('alpha-composers').innerHTML =
+    `<div class="alpha-btn ${activeLetter==='ALL'?'active':''}" onclick="setLetter('ALL')">Alle</div>` +
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ'.split('').map(l =>
+      `<div class="alpha-btn ${!letters.includes(l)?'disabled':''} ${activeLetter===l?'active':''}" onclick="setLetter('${l}')">${l}</div>`
+    ).join('');
 
-  document.getElementById('count-composers').textContent =
-    `${allComposers.length} person${allComposers.length !== 1 ? 'er' : ''}`;
+  document.getElementById('count-composers').textContent = `${allComposers.length} person${allComposers.length!==1?'er':''}`;
 
-  // Group by first letter
   const groups = {};
   filtered.forEach(c => {
     const l = (c.last_name || '?')[0].toUpperCase();
@@ -443,86 +203,48 @@ function renderComposers() {
 
   const container = document.getElementById('composers-list');
   if (!filtered.length) { container.innerHTML = '<div class="loading-state">Ingen treff</div>'; return; }
-
-  container.innerHTML = Object.entries(groups)
-    .sort(([a],[b]) => a.localeCompare(b,'no'))
+  container.innerHTML = Object.entries(groups).sort(([a],[b]) => a.localeCompare(b,'no'))
     .map(([letter, list]) => `
       <div class="letter-group">
         <div class="letter-heading">${letter}</div>
-        <div class="composer-grid">
-          ${list.map(c => composerCard(c)).join('')}
-        </div>
+        <div class="composer-grid">${list.map(composerCard).join('')}</div>
       </div>`).join('');
 }
 
 function composerCard(c) {
-  const name = c.last_name
-    ? (c.first_name ? `${c.last_name}, ${c.first_name}` : c.last_name)
-    : (c.first_name || '—');
+  const name = c.last_name ? (c.first_name ? `${c.last_name}, ${c.first_name}` : c.last_name) : (c.first_name || '—');
   const n = c.score_count;
   const tier = n >= 20 ? 'tier-4' : n >= 6 ? 'tier-3' : n >= 2 ? 'tier-2' : 'tier-1';
   const isAnon = c.person_type === 'anon' || c.person_type === 'collection';
-  const anonBadge = isAnon ? `<span class="anon-badge">${c.person_type === 'anon' ? 'Anon' : 'Samling'}</span>` : '';
   return `
     <a class="composer-card ${tier}" href="composer.html?id=${c.person_id}">
       <div class="composer-name">${name}</div>
       <div class="composer-meta">
-        ${c.born ? `<span>${c.born}</span>` : ''}
-        ${anonBadge}
-        <span class="score-count">${n} verk${n !== 1 ? '' : ''}</span>
+        ${isAnon ? `<span class="anon-badge">${c.person_type==='anon'?'Anon':'Samling'}</span>` : ''}
+        <span class="score-count">${n} verk</span>
       </div>
     </a>`;
 }
 
-function setLetter(l) {
-  activeLetter = l;
-  renderComposers();
-}
+function setLetter(l) { activeLetter = l; renderComposers(); }
 
-// ── Fetch publishers ──────────────────────────────────────────────────────────
 async function fetchPublishers() {
-  const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/publisher?select=publisher_id,publisher_name,city,country,is_self_published,is_unknown&order=publisher_name.asc`,
-    { headers: H }
-  );
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/publisher?select=publisher_id,publisher_name,city,country,is_self_published,is_unknown&order=publisher_name.asc`, { headers: H });
   const publishers = await r.json();
-  if (!Array.isArray(publishers)) { renderPublishersError(); return; }
+  if (!Array.isArray(publishers)) { document.getElementById('publishers-list').innerHTML = '<div class="loading-state">Feil ved lasting av forlag</div>'; return; }
 
-  // Count compositions per publisher
   const countMap = {};
-  let offset = 0;
-  while (true) {
-    const r2 = await fetch(
-      `${SUPABASE_URL}/rest/v1/composition?select=publisher_id&limit=1000&offset=${offset}`,
-      { headers: H }
-    );
-    const rows = await r2.json();
-    if (!Array.isArray(rows) || !rows.length) break;
-    rows.forEach(row => {
-      if (row.publisher_id) countMap[row.publisher_id] = (countMap[row.publisher_id] || 0) + 1;
-    });
-    if (rows.length < 1000) break;
-    offset += 1000;
-  }
+  const pubRows = await fetchAll('/rest/v1/publication?select=publisher_id');
+  pubRows.forEach(row => { if (row.publisher_id) countMap[row.publisher_id] = (countMap[row.publisher_id] || 0) + 1; });
 
   allPublishers = publishers.map(p => ({ ...p, comp_count: countMap[p.publisher_id] || 0 }))
-    .sort((a, b) => b.comp_count - a.comp_count);
+    .sort((a,b) => b.comp_count - a.comp_count);
 
-  renderPublishers();
-}
-
-function renderPublishers() {
-  document.getElementById('count-publishers').textContent =
-    `${allPublishers.length} forlag`;
-
-  const container = document.getElementById('publishers-list');
-  if (!allPublishers.length) { container.innerHTML = '<div class="loading-state">Ingen forlag funnet</div>'; return; }
-
-  container.innerHTML = `<div class="publisher-list">
+  document.getElementById('count-publishers').textContent = `${allPublishers.length} forlag`;
+  document.getElementById('publishers-list').innerHTML = `<div class="publisher-list">
     ${allPublishers.map(p => {
       const cls = p.is_self_published ? 'is-self' : p.is_unknown ? 'is-unknown' : '';
-      const badge = p.is_self_published
-        ? '<span class="pub-badge pub-badge-self">Eget forlag</span>'
+      const badge = p.is_self_published ? '<span class="pub-badge pub-badge-self">Eget forlag</span>'
         : p.is_unknown ? '<span class="pub-badge pub-badge-unknown">Ukjent</span>' : '';
       const city = [p.city, p.country].filter(Boolean).join(', ');
       return `
@@ -537,130 +259,68 @@ function renderPublishers() {
   </div>`;
 }
 
-function renderPublishersError() {
-  document.getElementById('publishers-list').innerHTML =
-    '<div class="loading-state">Feil ved lasting av forlag</div>';
-}
-
-// ── Search ────────────────────────────────────────────────────────────────────
-let _searchTimeout = null;
-let _publisherSearchTimeout = null;
-
-function handlePlateSearch(query) {
-  clearTimeout(_publisherSearchTimeout);
-  const resultsEl = document.getElementById('plateSearchResults');
-  if (!query.trim()) { resultsEl.style.display = 'none'; return; }
-  _publisherSearchTimeout = setTimeout(() => doPlateSearch(query.trim()), 280);
-}
-
-async function doPlateSearch(query) {
-  const resultsEl = document.getElementById('plateSearchResults');
-  resultsEl.style.display = 'block';
-  resultsEl.innerHTML = '<div class="search-empty">Søker…</div>';
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/composition?plate_number=ilike.*${encodeURIComponent(query)}*&select=composition_id,title,year_issued,plate_number,publisher_id&order=plate_number.asc&limit=8`,
-      { headers: H }
-    );
-    const rows = await r.json();
-    if (!Array.isArray(rows) || !rows.length) {
-      resultsEl.innerHTML = '<div class="search-empty">Ingen treff</div>';
-      return;
-    }
-    resultsEl.innerHTML = rows.map(c => `
-      <a class="search-result-item" href="composition.html?id=${c.composition_id}">
-        <span class="search-result-title">${c.title || '—'}</span>
-        <span class="search-result-meta">Pl. ${c.plate_number}${c.year_issued ? ' · ' + c.year_issued : ''}</span>
-      </a>`).join('');
-  } catch(e) {
-    resultsEl.innerHTML = '<div class="search-empty">Søkefeil</div>';
-  }
-}
+// ── Search ────────────────────────────────────────────────
+let _searchTimeout = null, _plateTimeout = null;
 
 function handleSearch(query) {
   clearTimeout(_searchTimeout);
-  const resultsEl = document.getElementById('searchResults');
-  if (!query.trim()) { resultsEl.style.display = 'none'; return; }
+  const el = document.getElementById('searchResults');
+  if (!query.trim()) { el.style.display = 'none'; return; }
   _searchTimeout = setTimeout(() => doSearch(query.trim()), 280);
 }
 
-async function doSearch(query) {
-  const resultsEl = document.getElementById('searchResults');
-  resultsEl.style.display = 'block';
-  resultsEl.innerHTML = '<div class="search-empty">Søker…</div>';
+function handlePlateSearch(query) {
+  clearTimeout(_plateTimeout);
+  const el = document.getElementById('plateSearchResults');
+  if (!query.trim()) { el.style.display = 'none'; return; }
+  _plateTimeout = setTimeout(() => doPlateSearch(query.trim()), 280);
+}
 
+async function doSearch(query) {
+  const el = document.getElementById('searchResults');
+  el.style.display = 'block'; el.innerHTML = '<div class="search-empty">Søker…</div>';
   const isId = /^\d+$/.test(query);
   let html = '';
-
   try {
     if (isId) {
-      // Direct composition_id lookup
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/composition?composition_id=eq.${query}&select=composition_id,title,year_issued&limit=5`,
-        { headers: H }
-      );
-      const rows = await r.json();
-      if (Array.isArray(rows) && rows.length) {
-        html += `<div class="search-section-label">Komposisjon ID</div>`;
-        rows.forEach(c => {
-          html += `<a class="search-result-item" href="composer.html?composition=${c.composition_id}">
-            <span class="search-result-title">${c.title || '—'}</span>
-            <span class="search-result-meta">#${c.composition_id}${c.year_issued ? ' · ' + c.year_issued : ''}</span>
-          </a>`;
-        });
+      const rows = await fetch(`${SUPABASE_URL}/rest/v1/publication?publication_id=eq.${query}&select=publication_id,title,year_issued&limit=5`, { headers: H }).then(r => r.json());
+      if (rows.length) {
+        html += `<div class="search-section-label">Publikasjon ID</div>`;
+        rows.forEach(c => { html += `<a class="search-result-item" href="publication.html?id=${c.publication_id}"><span class="search-result-title">${c.title||'—'}</span><span class="search-result-meta">#${c.publication_id}${c.year_issued?' · '+c.year_issued:''}</span></a>`; });
       }
     }
-
-    // Title search
-    const titleR = await fetch(
-      `${SUPABASE_URL}/rest/v1/composition?title=ilike.*${encodeURIComponent(query)}*&select=composition_id,title,year_issued&order=title.asc&limit=6`,
-      { headers: H }
-    );
-    const titles = await titleR.json();
-    if (Array.isArray(titles) && titles.length) {
+    const titles = await fetch(`${SUPABASE_URL}/rest/v1/publication?title=ilike.*${encodeURIComponent(query)}*&select=publication_id,title,year_issued&order=title.asc&limit=6`, { headers: H }).then(r => r.json());
+    if (titles.length) {
       html += `<div class="search-section-label">Verk</div>`;
-      titles.forEach(c => {
-        html += `<a class="search-result-item" href="composition.html?id=${c.composition_id}">
-          <span class="search-result-title">${c.title}</span>
-          <span class="search-result-meta">${c.year_issued || ''}</span>
-        </a>`;
-      });
+      titles.forEach(c => { html += `<a class="search-result-item" href="publication.html?id=${c.publication_id}"><span class="search-result-title">${c.title}</span><span class="search-result-meta">${c.year_issued||''}</span></a>`; });
     }
-
-    // Person search
-    const personR = await fetch(
-      `${SUPABASE_URL}/rest/v1/person?or=(last_name.ilike.*${encodeURIComponent(query)}*,first_name.ilike.*${encodeURIComponent(query)}*)&select=person_id,first_name,last_name&order=last_name.asc&limit=5`,
-      { headers: H }
-    );
-    const persons = await personR.json();
-    if (Array.isArray(persons) && persons.length) {
+    const persons = await fetch(`${SUPABASE_URL}/rest/v1/person?or=(last_name.ilike.*${encodeURIComponent(query)}*,first_name.ilike.*${encodeURIComponent(query)}*)&select=person_id,first_name,last_name&order=last_name.asc&limit=5`, { headers: H }).then(r => r.json());
+    if (persons.length) {
       html += `<div class="search-section-label">Komponister</div>`;
-      persons.forEach(p => {
-        const name = [p.first_name, p.last_name].filter(Boolean).join(' ');
-        html += `<a class="search-result-item" href="composer.html?id=${p.person_id}">
-          <span class="search-result-title">${name}</span>
-          <span class="search-result-meta">→ komponistside</span>
-        </a>`;
-      });
+      persons.forEach(p => { const name = [p.last_name, p.first_name].filter(Boolean).join(', '); html += `<a class="search-result-item" href="composer.html?id=${p.person_id}"><span class="search-result-title">${name}</span><span class="search-result-meta">→ komponistside</span></a>`; });
     }
-
     if (!html) html = '<div class="search-empty">Ingen treff</div>';
-  } catch(e) {
-    html = '<div class="search-empty">Søkefeil</div>';
-  }
+  } catch(e) { html = '<div class="search-empty">Søkefeil</div>'; }
+  el.innerHTML = html;
+}
 
-  resultsEl.innerHTML = html;
+async function doPlateSearch(query) {
+  const el = document.getElementById('plateSearchResults');
+  el.style.display = 'block'; el.innerHTML = '<div class="search-empty">Søker…</div>';
+  try {
+    const rows = await fetch(`${SUPABASE_URL}/rest/v1/publication?plate_number=ilike.*${encodeURIComponent(query)}*&select=publication_id,title,year_issued,plate_number&order=plate_number.asc&limit=8`, { headers: H }).then(r => r.json());
+    if (!rows.length) { el.innerHTML = '<div class="search-empty">Ingen treff</div>'; return; }
+    el.innerHTML = rows.map(c => `<a class="search-result-item" href="publication.html?id=${c.publication_id}"><span class="search-result-title">${c.title||'—'}</span><span class="search-result-meta">Pl. ${c.plate_number}${c.year_issued?' · '+c.year_issued:''}</span></a>`).join('');
+  } catch(e) { el.innerHTML = '<div class="search-empty">Søkefeil</div>'; }
 }
 
 document.addEventListener('click', e => {
   if (!e.target.closest('.header-search')) {
     document.getElementById('searchResults').style.display = 'none';
-    if(document.getElementById('plateSearchResults')) document.getElementById('plateSearchResults').style.display = 'none';
     document.getElementById('plateSearchResults').style.display = 'none';
   }
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 fetchComposers();
 fetchPublishers();
 </script>
