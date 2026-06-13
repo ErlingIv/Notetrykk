@@ -212,6 +212,7 @@
 <script>
 const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const H_GET = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json', Prefer: 'return=representation' };
 
@@ -223,11 +224,14 @@ let changedFields  = {};
 let currentPPRows  = [];   // publication_person rows for current pub
 let currentPIRows  = [];   // publication_instrumentation rows
 
-const api = (path, opts) =>
-  fetch(SUPABASE_URL + path, { headers: H, ...opts }).then(async r => {
+const api = (path, opts) => {
+  // Use write headers (with Prefer) only for mutating methods
+  const isWrite = opts && ['POST','PATCH','PUT','DELETE'].includes(opts.method);
+  return fetch(SUPABASE_URL + path, { headers: isWrite ? H : H_GET, ...opts }).then(async r => {
     if (!r.ok) { const t = await r.text(); throw new Error(t); }
     return r.json().catch(() => null);
   });
+};
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
