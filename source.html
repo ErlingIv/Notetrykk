@@ -270,13 +270,19 @@ async function load() {
   try {
     let rows = [], offset = 0;
     while (true) {
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/source_import?select=*&order=source_id.asc&limit=1000&offset=${offset}`,
+      const resp = await fetch(
+        `${SUPABASE_URL}/rest/v1/source_import?select=source_id,person_raw,role_raw,title_raw,instrumentation_raw,publisher_raw,plate_number_raw,publication_year_raw,month_raw,periodical_raw,comment_raw&order=source_id.asc&limit=1000&offset=${offset}`,
         { headers: H }
       );
-      const batch = await r.json();
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${errText.substring(0,200)}`);
+      }
+      const batch = await resp.json();
       if (!Array.isArray(batch) || !batch.length) break;
       rows = rows.concat(batch);
+      document.getElementById('tableContainer').innerHTML =
+        `<div class="loading-state">Laster kildedata… ${rows.length} rader</div>`;
       if (batch.length < 1000) break;
       offset += 1000;
     }
@@ -535,6 +541,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 });
 
 function esc(s) {
+  if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
