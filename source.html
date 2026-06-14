@@ -292,12 +292,12 @@ async function load() {
 // ── Filters ───────────────────────────────────────────────────────────────────
 function buildFilters() {
   const years = [...new Set(allRows.map(r => {
-    const y = r.aar || '';
+    const y = r.publication_year_raw || '';
     return y.match(/^\d{4}$/) ? y : (y.match(/^(\d{4})/)?.[1] || '');
   }).filter(Boolean))].sort();
 
-  const forlag = [...new Set(allRows.map(r => r.forlag).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
-  const beset  = [...new Set(allRows.map(r => r.besetning).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
+  const forlag = [...new Set(allRows.map(r => r.publisher_raw).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
+  const beset  = [...new Set(allRows.map(r => r.instrumentation_raw).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
 
   const yearSel = document.getElementById('yearFilter');
   years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
@@ -316,11 +316,11 @@ function applyFilters() {
   const beset  = document.getElementById('besetningFilter').value;
 
   filtered = allRows.filter(r => {
-    if (year   && !(r.aar || '').startsWith(year))   return false;
-    if (forlag && r.forlag !== forlag)                          return false;
-    if (beset  && r.besetning !== beset)                        return false;
+    if (year   && !(r.publication_year_raw || '').startsWith(year))   return false;
+    if (forlag && r.publisher_raw !== forlag)                          return false;
+    if (beset  && r.instrumentation_raw !== beset)                        return false;
     if (q) {
-      const hay = [r.person, r.tittel, r.forlag, r.besetning, r.platenr, r.periodikum, r.kommentar]
+      const hay = [r.person_raw, r.title_raw, r.publisher_raw, r.instrumentation_raw, r.plate_number_raw, r.periodical_raw, r.comment_raw]
         .filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
@@ -332,10 +332,10 @@ function applyFilters() {
     let va, vb;
     switch(sortKey) {
       case 'id':         va = a.source_id;                       vb = b.source_id; break;
-      case 'person':     va = a.person || '';             vb = b.person || ''; break;
-      case 'tittel':     va = a.tittel || '';             vb = b.tittel || ''; break;
-      case 'forlag':     va = a.forlag || '';             vb = b.forlag || ''; break;
-      case 'year':       va = a.aar || '';      vb = b.aar || ''; break;
+      case 'person':     va = a.person_raw || '';             vb = b.person_raw || ''; break;
+      case 'tittel':     va = a.title_raw || '';             vb = b.title_raw || ''; break;
+      case 'forlag':     va = a.publisher_raw || '';             vb = b.publisher_raw || ''; break;
+      case 'year':       va = a.publication_year_raw || '';      vb = b.publication_year_raw || ''; break;
       default:           va = a.source_id;                       vb = b.source_id;
     }
     if (typeof va === 'number') return sortDir === 'asc' ? va - vb : vb - va;
@@ -387,29 +387,29 @@ function renderTable() {
   }).join('');
 
   const tbody = page.map(r => {
-    const bCodes = (r.besetning || '').split(/\s+/).filter(Boolean);
+    const bCodes = (r.instrumentation_raw || '').split(/\s+/).filter(Boolean);
     const bHtml = bCodes.map(code => {
       const unk = !KNOWN_CODES.has(code) ? ' unknown' : '';
       return `<span class="code-pill${unk}">${esc(code)}</span>`;
     }).join(' ');
 
-    const rolleHtml = r.rolle
-      ? `<div class="rolle-val">${esc(r.rolle)}</div>` : '';
+    const rolleHtml = r.role_raw
+      ? `<div class="rolle-val">${esc(r.role_raw)}</div>` : '';
 
     return `<tr class="data-row" data-id="${r.source_id}">
       <td class="id-cell">${r.source_id}</td>
       <td class="person-cell">
-        <div class="person-name">${esc(r.person || '—')}</div>
+        <div class="person-name">${esc(r.person_raw || '—')}</div>
         ${rolleHtml}
       </td>
-      <td class="title-cell"><div class="title-main">${esc(r.tittel || '—')}</div></td>
+      <td class="title-cell"><div class="title-main">${esc(r.title_raw || '—')}</div></td>
       <td class="besetning-cell">${bHtml || '<span style="color:var(--muted);font-size:0.75rem">—</span>'}</td>
-      <td class="forlag-cell hide-sm">${esc(r.forlag || '—')}</td>
-      <td class="platenr-cell hide-sm">${esc(r.platenr || '—')}</td>
-      <td class="year-cell">${esc(r.aar || '—')}</td>
-      <td class="maaned-cell hide-sm">${esc(r.maaned || '')}</td>
-      <td class="periodikum-cell hide-sm">${esc(r.periodikum || '')}</td>
-      <td class="kommentar-cell hide-sm">${esc(r.kommentar || '')}</td>
+      <td class="forlag-cell hide-sm">${esc(r.publisher_raw || '—')}</td>
+      <td class="platenr-cell hide-sm">${esc(r.plate_number_raw || '—')}</td>
+      <td class="year-cell">${esc(r.publication_year_raw || '—')}</td>
+      <td class="maaned-cell hide-sm">${esc(r.month_raw || '')}</td>
+      <td class="periodikum-cell hide-sm">${esc(r.periodical_raw || '')}</td>
+      <td class="kommentar-cell hide-sm">${esc(r.comment_raw || '')}</td>
     </tr>`;
   }).join('');
 
@@ -477,21 +477,21 @@ function openDrawer(id) {
   const row = allRows.find(r => r.source_id === id);
   if (!row) return;
 
-  document.getElementById('drawerTitle').textContent = row.tittel || '—';
+  document.getElementById('drawerTitle').textContent = row.title_raw || '—';
 
   const fields = [
     ['ID',            row.source_id],
-    ['Person',        row.person],
-    ['Rolle',         row.rolle],
-    ['Tittel',        row.tittel],
-    ['Besetning',     row.besetning],
-    ['Forlag',        row.forlag],
-    ['Platenr',       row.platenr],
-    ['Utgivelsesår',  row.aar],
-    ['Måned',         row.maaned],
-    ['Periodikum',    row.periodikum],
-    ['Kommentar',     row.kommentar],
-    ['Staged at',     row.staged_at ? row.staged_at.replace('T', ' ').slice(0,19) : null],
+    ['Person',        row.person_raw],
+    ['Rolle',         row.role_raw],
+    ['Tittel',        row.title_raw],
+    ['Besetning',     row.instrumentation_raw],
+    ['Forlag',        row.publisher_raw],
+    ['Platenr',       row.plate_number_raw],
+    ['Utgivelsesår',  row.publication_year_raw],
+    ['Måned',         row.month_raw],
+    ['Periodikum',    row.periodical_raw],
+    ['Kommentar',     row.comment_raw],
+    ['Staged at',     row.pasted_at ? row.pasted_at.replace('T', ' ').slice(0,19) : null],
   ];
 
   const html = `<div class="field-grid">` +
