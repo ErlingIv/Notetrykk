@@ -6,737 +6,584 @@
 <title>Gjennomgang — Norske Notetrykk</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:      #f7f4ee;
-    --paper:   #fffef9;
-    --ink:     #1a1814;
-    --muted:   #7a7060;
-    --faint:   #e8e2d4;
-    --accent:  #8b3a1e;
-    --accent2: #2a5c45;
-    --border:  #d4cdc0;
-    --edited:  #e8f0ea;
-    --edited-border: #2a5c45;
-    --serif:   'Playfair Display', Georgia, serif;
-    --body:    'Source Serif 4', Georgia, serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--body); background: var(--bg); color: var(--ink); min-height: 100vh; }
-
-  .app { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
-
-  /* ── Left panel ── */
-  .left-panel {
-    background: var(--paper); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; overflow: hidden;
-  }
-  .panel-header { padding: 1.25rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-  .panel-title { font-family: var(--serif); font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem; }
-  .panel-title span { color: var(--accent); }
-  .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
-  .search-full { grid-column: 1 / -1; }
-  .search-input {
-    width: 100%; font-family: var(--body); font-size: 0.8rem;
-    background: var(--bg); border: 1px solid var(--border); color: var(--ink);
-    padding: 0.45rem 0.6rem; outline: none; transition: border-color 0.15s;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--muted); }
-  .search-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 0.2rem; }
-  .search-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
-  .btn {
-    font-family: var(--body); font-size: 0.75rem; cursor: pointer;
-    padding: 0.4rem 0.8rem; border: 1px solid var(--border);
-    background: var(--bg); color: var(--muted); transition: all 0.15s; letter-spacing: 0.04em;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn-primary:hover { background: #7a3018; border-color: #7a3018; color: #fff; }
-  .btn-save { background: var(--accent2); color: #fff; border-color: var(--accent2); }
-  .btn-save:hover { background: #1e4a35; border-color: #1e4a35; color: #fff; }
-  .btn-sm { font-size: 0.68rem; padding: 0.25rem 0.55rem; }
-  .btn-danger { border-color: var(--accent); color: var(--accent); }
-  .btn-danger:hover { background: var(--accent); color: #fff; }
-
-  .result-count { font-size: 0.72rem; color: var(--muted); padding: 0.4rem 1.25rem; border-bottom: 1px solid var(--faint); flex-shrink: 0; }
-  .results-list { overflow-y: auto; flex: 1; }
-  .result-item { padding: 0.7rem 1.25rem; border-bottom: 1px solid var(--faint); cursor: pointer; transition: background 0.1s; }
-  .result-item:hover { background: var(--bg); }
-  .result-item.active { background: #f0ece6; border-left: 3px solid var(--accent); padding-left: calc(1.25rem - 3px); }
-  .result-item.is-edited { border-left: 3px solid var(--accent2); padding-left: calc(1.25rem - 3px); }
-  .result-item.active.is-edited { border-left: 3px solid var(--accent); }
-  .ri-id { font-size: 0.68rem; color: var(--muted); margin-bottom: 0.1rem; }
-  .ri-title { font-family: var(--serif); font-size: 0.88rem; font-weight: 500; line-height: 1.3; }
-  .ri-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
-  .ri-edited-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); margin-right: 0.3rem; vertical-align: middle; }
-  .empty-state { padding: 2rem 1.25rem; color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; }
-  .loading-msg { padding: 1rem 1.25rem; color: var(--muted); font-size: 0.82rem; font-style: italic; }
-
-  /* ── Right panel ── */
-  .right-panel { overflow-y: auto; padding: 1.5rem 2rem 4rem; }
-  .no-selection { display: flex; align-items: center; justify-content: center; height: 60vh; color: var(--muted); font-size: 0.9rem; font-style: italic; }
-
-  .detail-header { margin-bottom: 1.25rem; }
-  .detail-id { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
-  .detail-title-display { font-family: var(--serif); font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 700; line-height: 1.2; }
-  .detail-subtitle-display { font-family: var(--serif); font-size: 1rem; font-style: italic; color: var(--muted); margin-top: 0.2rem; }
-  .edited-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; padding: 2px 8px; border-radius: 3px; background: var(--edited); color: var(--accent2); border: 1px solid var(--edited-border); margin-top: 0.5rem; letter-spacing: 0.04em; }
-
-  .edit-section { background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
-  .edit-section-title { font-family: var(--serif); font-size: 0.95rem; font-weight: 500; color: var(--ink); margin-bottom: 0.9rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--faint); }
-  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .field-full { grid-column: 1 / -1; }
-  .field-group { display: flex; flex-direction: column; gap: 0.25rem; }
-  .field-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
-  .field-input, .field-select, .field-textarea {
-    font-family: var(--body); font-size: 0.85rem;
-    background: var(--bg); border: 1px solid var(--border);
-    color: var(--ink); padding: 0.45rem 0.6rem; outline: none;
-    transition: border-color 0.15s; width: 100%;
-  }
-  .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--accent); }
-  .field-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
-  .field-input.changed, .field-select.changed, .field-textarea.changed { border-color: var(--accent2); background: var(--edited); }
-  .field-input:disabled { color: var(--muted); cursor: default; }
-
-  /* ── Person rows ── */
-  .person-block {
-    border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.6rem; overflow: hidden;
-  }
-  .person-block.unresolved { border-color: #c8a84b; }
-  .person-block-header {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-    padding: 0.55rem 0.75rem; background: var(--bg);
-  }
-  .person-block.unresolved .person-block-header { background: #fdf6e3; }
-  .person-name-display { font-family: var(--serif); font-size: 0.88rem; font-weight: 500; }
-  .person-credited-as { font-size: 0.72rem; color: var(--muted); font-style: italic; margin-top: 1px; }
-  .person-unresolved-label { font-size: 0.78rem; color: #7a5c2a; }
-  .person-note { font-size: 0.7rem; color: var(--muted); font-style: italic; }
-  .role-badge { font-size: 0.65rem; padding: 2px 7px; border-radius: 3px; border: 1px solid var(--border); color: var(--muted); background: var(--paper); white-space: nowrap; flex-shrink: 0; }
-  .person-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
-
-  /* ── Person edit panel ── */
-  .person-edit-panel {
-    border-top: 1px solid var(--border); padding: 0.75rem; background: var(--paper); display: none;
-  }
-  .person-edit-panel.open { display: block; }
-  .person-search-wrap { position: relative; }
-  .person-search-results {
-    position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
-    background: var(--paper); border: 1px solid var(--border); border-top: none;
-    max-height: 180px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
-  .psr-item { padding: 0.45rem 0.65rem; cursor: pointer; font-size: 0.82rem; border-bottom: 1px solid var(--faint); }
-  .psr-item:last-child { border-bottom: none; }
-  .psr-item:hover { background: var(--bg); }
-  .psr-item.create-new { color: var(--accent2); font-style: italic; }
-  .person-new-form { margin-top: 0.6rem; display: none; }
-  .person-new-form.open { display: block; }
-  .person-new-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
-  .person-new-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-  .edit-hint { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.5rem; }
-
-  /* ── Raw source ── */
-  .raw-toggle { display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; width: 100%; font-family: var(--body); font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6rem 0; border-top: 1px solid var(--faint); margin-top: 0.5rem; }
-  .raw-toggle:hover { color: var(--ink); }
-  .raw-body { display: none; margin-top: 0.5rem; }
-  .raw-body.open { display: block; }
-  .raw-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-  .raw-table tr { border-bottom: 1px solid var(--faint); }
-  .raw-table tr:last-child { border-bottom: none; }
-  .raw-table td { padding: 0.35rem 0.5rem; vertical-align: top; }
-  .raw-table td.rk { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; width: 8rem; background: var(--bg); border-right: 1px solid var(--faint); }
-  .raw-table td.rv { color: var(--ink); word-break: break-word; }
-  .raw-table td.rv.empty { color: var(--muted); font-style: italic; }
-
-  /* ── Save bar ── */
-  .save-bar { position: sticky; bottom: 0; background: var(--paper); border-top: 1px solid var(--border); padding: 0.75rem 2rem; display: flex; align-items: center; gap: 1rem; margin: 0 -2rem -4rem; z-index: 10; }
-  .save-status { font-size: 0.78rem; color: var(--muted); flex: 1; }
-  .save-status.ok  { color: var(--accent2); }
-  .save-status.err { color: var(--accent); }
-
-  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--ink); color: #fff; font-size: 0.82rem; padding: 0.6rem 1.2rem; border-radius: 4px; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-  .toast.error { background: var(--accent); }
+:root{--bg:#f7f4ee;--paper:#fffef9;--ink:#1a1814;--muted:#7a7060;--faint:#e8e2d4;--accent:#8b3a1e;--accent2:#2a5c45;--border:#d4cdc0;--serif:'Playfair Display',Georgia,serif;--body:'Source Serif 4',Georgia,serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+.app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+.left{background:var(--paper);border-right:1px solid var(--border);height:100vh;position:sticky;top:0;overflow:hidden;display:flex;flex-direction:column}
+.ph{padding:1.25rem;border-bottom:1px solid var(--border)}
+.pt{font-family:var(--serif);font-size:1rem;font-weight:700;margin-bottom:.75rem}
+.pt span{color:var(--accent)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.sf{grid-column:1/-1}
+.sl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.2rem}
+.si{width:100%;font-family:var(--body);font-size:.8rem;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:.4rem .6rem;outline:none}
+.si:focus{border-color:var(--accent)}
+.sa{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.btn{font-family:var(--body);font-size:.75rem;cursor:pointer;padding:.4rem .8rem;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.bp{background:var(--accent);color:#fff;border-color:var(--accent)}
+.bp:hover{background:#7a3018;color:#fff}
+.rc{font-size:.72rem;color:var(--muted);padding:.4rem 1.25rem;border-bottom:1px solid var(--faint)}
+.rl{overflow-y:auto;flex:1}
+.ri{padding:.7rem 1.25rem;border-bottom:1px solid var(--faint);cursor:pointer}
+.ri:hover{background:var(--bg)}
+.ri.active{background:#f0ece6;border-left:3px solid var(--accent);padding-left:calc(1.25rem - 3px)}
+.ri.edited{border-left:3px solid var(--accent2);padding-left:calc(1.25rem - 3px)}
+.rid{font-size:.68rem;color:var(--muted)}
+.rti{font-family:var(--serif);font-size:.88rem;font-weight:500;line-height:1.3}
+.rm{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+.es{padding:2rem 1.25rem;color:var(--muted);font-size:.85rem;font-style:italic;text-align:center}
+.lm{padding:1rem 1.25rem;color:var(--muted);font-size:.82rem;font-style:italic}
+.right{overflow-y:auto;padding:1.5rem 2rem 4rem}
+.ns{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--muted);font-size:.9rem;font-style:italic}
+.dh{margin-bottom:1.25rem}
+.did{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+.dtd{font-family:var(--serif);font-size:clamp(1.3rem,2.5vw,1.8rem);font-weight:700;line-height:1.2}
+.dsd{font-family:var(--serif);font-size:1rem;font-style:italic;color:var(--muted);margin-top:.2rem}
+.eb{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;padding:2px 8px;border-radius:3px;background:#e8f0ea;color:var(--accent2);border:1px solid var(--accent2);margin-top:.5rem}
+.es2{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem}
+.est{font-family:var(--serif);font-size:.95rem;font-weight:500;color:var(--ink);margin-bottom:.9rem;padding-bottom:.5rem;border-bottom:1px solid var(--faint)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.ff{grid-column:1/-1}
+.fgr{display:flex;flex-direction:column;gap:.25rem}
+.fl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.fi,.fs,.ft{font-family:var(--body);font-size:.85rem;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:.45rem .6rem;outline:none;width:100%}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent)}
+.ft{resize:vertical;min-height:70px;line-height:1.5}
+.fi:disabled{color:var(--muted)}
+.fi.ch,.fs.ch,.ft.ch{border-color:var(--accent2);background:#e8f0ea}
+.pb{border:1px solid var(--border);border-radius:6px;margin-bottom:.6rem;overflow:hidden}
+.pb.ur{border-color:#c8a84b}
+.pbh{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem .75rem;background:var(--bg)}
+.pb.ur .pbh{background:#fdf6e3}
+.pnd{font-family:var(--serif);font-size:.88rem;font-weight:500}
+.pca{font-size:.72rem;color:var(--muted);font-style:italic;margin-top:1px}
+.pul{font-size:.78rem;color:#7a5c2a}
+.pno{font-size:.7rem;color:var(--muted);font-style:italic}
+.rb{font-size:.65rem;padding:2px 7px;border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--paper);white-space:nowrap;flex-shrink:0}
+.pa{display:flex;gap:.4rem;flex-shrink:0}
+.bts{font-family:var(--body);font-size:.68rem;cursor:pointer;padding:.25rem .55rem;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.bts:hover{border-color:var(--accent);color:var(--accent)}
+.btp{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btp:hover{background:#7a3018;color:#fff}
+.pep{border-top:1px solid var(--border);padding:.75rem;background:var(--paper);display:none}
+.pep.open{display:block}
+.psw{position:relative}
+.psr{position:absolute;top:100%;left:0;right:0;z-index:20;background:var(--paper);border:1px solid var(--border);border-top:none;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.08);display:none}
+.psi{padding:.45rem .65rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid var(--faint)}
+.psi:last-child{border-bottom:none}
+.psi:hover{background:var(--bg)}
+.psi.cn{color:var(--accent2);font-style:italic}
+.pnf{margin-top:.6rem;display:none}
+.pnf.open{display:block}
+.png{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.pna{display:flex;gap:.5rem;margin-top:.5rem}
+.eh{font-size:.7rem;color:var(--muted);margin-bottom:.5rem}
+.rt{display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;width:100%;font-family:var(--body);font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.6rem 0;border-top:1px solid var(--faint);margin-top:.5rem}
+.rt:hover{color:var(--ink)}
+.rb2{display:none;margin-top:.5rem}
+.rb2.open{display:block}
+.rtb{width:100%;border-collapse:collapse;font-size:.78rem}
+.rtb tr{border-bottom:1px solid var(--faint)}
+.rtb tr:last-child{border-bottom:none}
+.rtb td{padding:.35rem .5rem;vertical-align:top}
+.rtb td.rk{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap;width:8rem;background:var(--bg);border-right:1px solid var(--faint)}
+.rtb td.rv{color:var(--ink);word-break:break-word}
+.rtb td.rv.em{color:var(--muted);font-style:italic}
+.sb{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--border);padding:.75rem 2rem;display:flex;align-items:center;gap:1rem;margin:0 -2rem -4rem;z-index:10}
+.ss{font-size:.78rem;color:var(--muted);flex:1}
+.ss.ok{color:var(--accent2)}
+.ss.er{color:var(--accent)}
+.bs{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.bs:hover{background:#1e4a35;color:#fff}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:#fff;font-size:.82rem;padding:.6rem 1.2rem;border-radius:4px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.err{background:var(--accent)}
+#db{background:#111;color:#9f9;font-size:.72rem;padding:.35rem 1rem;font-family:monospace;position:fixed;bottom:0;left:0;right:0;z-index:200}
 </style>
 </head>
 <body>
+<div style="position:fixed;top:0;left:0;right:0;z-index:999;background:#c00;color:#fff;padding:8px;font-family:monospace;font-size:13px;display:flex;gap:10px;align-items:center">
+  <span id="js-status">JS NOT RUNNING</span>
+  <button onclick="document.getElementById('js-status').textContent='JS OK - onclick works'; document.getElementById('s-title').value='';" style="background:#fff;color:#000;border:none;padding:4px 8px;cursor:pointer">Test JS</button>
+</div>
+<script>document.getElementById('js-status').textContent='JS running (inline script)';</script>
 <div class="app">
-
-  <!-- ── Left panel ── -->
-  <div class="left-panel">
-    <div class="panel-header">
-      <div class="panel-title">Norske Notetrykk <span>/ Gjennomgang</span></div>
-      <div class="search-grid">
-        <div class="search-full">
-          <label class="search-label">Tittel</label>
-          <input class="search-input" id="s-title" placeholder="Søk i tittel…" autocomplete="off">
-        </div>
-        <div>
-          <label class="search-label">Publikasjons-ID</label>
-          <input class="search-input" id="s-id" placeholder="f.eks. 42" type="number">
-        </div>
-        <div>
-          <label class="search-label">År</label>
-          <input class="search-input" id="s-year" placeholder="f.eks. 1860">
-        </div>
-        <div>
-          <label class="search-label">Forlag</label>
-          <input class="search-input" id="s-publisher" placeholder="Warmuth…">
-        </div>
-        <div>
-          <label class="search-label">Komponist / person</label>
-          <input class="search-input" id="s-person" placeholder="Grieg…">
-        </div>
-      </div>
-      <div class="search-actions">
-        <button class="btn btn-primary" id="btn-search">Søk</button>
-        <button class="btn" id="btn-clear">Nullstill</button>
-        <button class="btn" id="btn-unresolved">Uløste lyrikere</button>
-      </div>
+<div class="left">
+  <div class="ph">
+    <div class="pt">Norske Notetrykk <span>/ Gjennomgang</span></div>
+    <div class="sg">
+      <div class="sf"><label class="sl">Tittel</label><input class="si" id="s-title" placeholder="Søk i tittel..." autocomplete="off"></div>
+      <div><label class="sl">ID</label><input class="si" id="s-id" placeholder="42" type="number"></div>
+      <div><label class="sl">År</label><input class="si" id="s-year" placeholder="1860"></div>
+      <div><label class="sl">Forlag</label><input class="si" id="s-publisher" placeholder="Warmuth..."></div>
+      <div><label class="sl">Person</label><input class="si" id="s-person" placeholder="Grieg..."></div>
     </div>
-    <div class="result-count" id="result-count">—</div>
-    <div class="results-list" id="results-list">
-      <div class="empty-state">Bruk søkefeltet for å finne publikasjoner.</div>
+    <div class="sa">
+      <button class="btn bp" id="btn-search">Sok</button>
+      <button class="btn" id="btn-clear">Nullstill</button>
+      <button class="btn" id="btn-unresolved">Uloste lyrikere</button>
     </div>
   </div>
-
-  <!-- ── Right panel ── -->
-  <div class="right-panel" id="right-panel">
-    <div class="no-selection">Velg en publikasjon til venstre.</div>
-  </div>
+  <div class="rc" id="rc">—</div>
+  <div class="rl" id="rl"><div class="es">Bruk sokefeltet.</div></div>
+</div>
+<div class="right" id="rp"><div class="ns">Velg en publikasjon til venstre.</div></div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="db">Init...</div>
 
 <script>
-const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
-const H_GET = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
-const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json', Prefer: 'return=representation' };
+var URL_ = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+var KEY_ = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+var HEAD = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_ };
+var HEAD_W = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
-let currentPub     = null;
-let publishers     = {};
-let instrumentation = {};
-let roles          = {};
-let changedFields  = {};
-let currentPPRows  = [];   // publication_person rows for current pub
-let currentPIRows  = [];   // publication_instrumentation rows
+var currentPub = null, currentPP = [], currentPI = [];
+var publishers = {}, instrs = {}, roles_ = {}, changed = {};
 
-const api = (path, opts) => {
-  // Use write headers (with Prefer) only for mutating methods
-  const isWrite = opts && ['POST','PATCH','PUT','DELETE'].includes(opts.method);
-  return fetch(SUPABASE_URL + path, { headers: isWrite ? H : H_GET, ...opts }).then(async r => {
-    if (!r.ok) { const t = await r.text(); throw new Error(t); }
-    return r.json().catch(() => null);
-  });
-};
+function db(m) { document.getElementById('db').textContent = m; console.log(m); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(m, e) { var t=document.getElementById('toast'); t.textContent=m; t.className='toast show'+(e?' err':''); setTimeout(function(){t.classList.remove('show');},3000); }
 
-function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function showToast(msg, isError) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
 function formatYear(p) {
   if (!p.year_issued) return '—';
-  if (p.year_qualifier === 'range' && p.year_issued_end) return `${p.year_issued}–${p.year_issued_end}`;
-  if (p.year_qualifier === 'circa')  return `ca. ${p.year_issued}`;
-  if (p.year_qualifier === 'before') return `f. ${p.year_issued}`;
-  if (p.year_qualifier === 'decade') return `${p.year_issued}0-åra`;
+  if (p.year_qualifier==='range' && p.year_issued_end) return p.year_issued+'–'+p.year_issued_end;
+  if (p.year_qualifier==='circa') return 'ca. '+p.year_issued;
+  if (p.year_qualifier==='before') return 'f. '+p.year_issued;
+  if (p.year_qualifier==='decade') return p.year_issued+'0-ara';
   return String(p.year_issued);
 }
 
-async function loadRefTables() {
-  const [pubs, instr, rols] = await Promise.all([
-    api('/rest/v1/publisher?select=publisher_id,publisher_name&limit=1000'),
-    api('/rest/v1/instrumentation?select=instrumentation_id,legacy_code,description_no&limit=500'),
-    api('/rest/v1/role?select=role_id,role_name&limit=100'),
-  ]);
-  pubs.forEach(p  => publishers[p.publisher_id] = p.publisher_name);
-  instr.forEach(i => instrumentation[i.instrumentation_id] = i);
-  rols.forEach(r  => roles[r.role_id] = r.role_name);
+function get(path) {
+  db('GET '+path.substring(0,80));
+  return fetch(URL_+path, {headers:HEAD}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
+  });
 }
-
-// ── Search ─────────────────────────────────────────────────
-async function doSearch(unresolvedOnly) {
-  const title  = document.getElementById('s-title').value.trim();
-  const id     = document.getElementById('s-id').value.trim();
-  const year   = document.getElementById('s-year').value.trim();
-  const pubQ   = document.getElementById('s-publisher').value.trim();
-  const perQ   = document.getElementById('s-person').value.trim();
-
-  document.getElementById('result-count').textContent = 'Søker…';
-  document.getElementById('results-list').innerHTML = '<div class="loading-msg">Laster…</div>';
-
-  try {
-    let filters = [];
-    if (id)   filters.push(`publication_id=eq.${id}`);
-    if (title) filters.push(`title=ilike.*${encodeURIComponent(title)}*`);
-    if (year)  filters.push(`year_issued=eq.${year}`);
-
-    if (pubQ) {
-      const pubs = await api(`/rest/v1/publisher?publisher_name=ilike.*${encodeURIComponent(pubQ)}*&select=publisher_id`);
-      if (!pubs.length) { showResults([], 0); return; }
-      filters.push(`publisher_id=in.(${pubs.map(p=>p.publisher_id).join(',')})`);
-    }
-
-    if (perQ) {
-      const pers = await api(`/rest/v1/person?or=(last_name.ilike.*${encodeURIComponent(perQ)}*,display_name.ilike.*${encodeURIComponent(perQ)}*)&select=person_id&limit=200`);
-      if (!pers.length) { showResults([], 0); return; }
-      const ppR = await api(`/rest/v1/publication_person?person_id=in.(${pers.map(p=>p.person_id).join(',')})&select=publication_id&limit=2000`);
-      const ids = [...new Set(ppR.map(r=>r.publication_id))];
-      if (!ids.length) { showResults([], 0); return; }
-      filters.push(`publication_id=in.(${ids.join(',')})`);
-    }
-
-    if (unresolvedOnly) {
-      const unres = await api(`/rest/v1/publication_person?person_id=is.null&notes=eq.Extracted from title&select=publication_id&limit=2000`);
-      const ids = [...new Set(unres.map(r=>r.publication_id))];
-      if (!ids.length) { showResults([], 0); return; }
-      filters.push(`publication_id=in.(${ids.join(',')})`);
-    }
-
-    const qs = filters.length ? filters.join('&') : 'publication_id=gt.0';
-    const results = await api(`/rest/v1/publication?${qs}&select=publication_id,title,subtitle,year_issued,year_issued_end,year_qualifier,publisher_id,plate_number,is_edited&order=year_issued.asc,title.asc&limit=200`);
-    showResults(results, results.length);
-  } catch(e) {
-    document.getElementById('result-count').textContent = 'Feil';
-    document.getElementById('results-list').innerHTML = `<div class="empty-state">Feil: ${esc(e.message)}</div>`;
-  }
+function patch(path, body) {
+  db('PATCH '+path.substring(0,80));
+  return fetch(URL_+path, {method:'PATCH', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
+  });
 }
-
-function showResults(pubs, total) {
-  document.getElementById('result-count').textContent =
-    total === 0 ? 'Ingen treff' :
-    total >= 200 ? '200+ treff — snevr inn søket' :
-    `${total} treff`;
-  if (!pubs.length) {
-    document.getElementById('results-list').innerHTML = '<div class="empty-state">Ingen treff.</div>';
-    return;
-  }
-  document.getElementById('results-list').innerHTML = pubs.map(p => `
-    <div class="result-item${p.is_edited?' is-edited':''}" data-id="${p.publication_id}">
-      <div class="ri-id">#${p.publication_id}</div>
-      <div class="ri-title">${esc(p.title||'—')}</div>
-      <div class="ri-meta">${p.is_edited?'<span class="ri-edited-dot"></span>':''}${esc(publishers[p.publisher_id]||'—')} · ${formatYear(p)}${p.plate_number?' · pl. '+esc(p.plate_number):''}</div>
-    </div>`).join('');
-  document.querySelectorAll('.result-item').forEach(el =>
-    el.addEventListener('click', () => loadDetail(parseInt(el.dataset.id)))
-  );
-}
-
-// ── Detail ─────────────────────────────────────────────────
-async function loadDetail(pubId) {
-  document.querySelectorAll('.result-item').forEach(el =>
-    el.classList.toggle('active', parseInt(el.dataset.id) === pubId)
-  );
-  document.getElementById('right-panel').innerHTML = '<div class="loading-msg" style="padding:2rem">Laster…</div>';
-  changedFields = {};
-
-  try {
-    const [pubs, ppRows, piRows] = await Promise.all([
-      api(`/rest/v1/publication?publication_id=eq.${pubId}&select=*`),
-      api(`/rest/v1/publication_person?publication_id=eq.${pubId}&select=*&order=sequence_no.asc`),
-      api(`/rest/v1/publication_instrumentation?publication_id=eq.${pubId}&select=*`),
-    ]);
-    const pub = pubs[0];
-    if (!pub) throw new Error('Ikke funnet');
-    currentPub    = pub;
-    currentPPRows = ppRows;
-    currentPIRows = piRows;
-
-    const srcRows = await api(`/rest/v1/source_import?source_id=eq.${pub.primary_source_id}&select=*`);
-
-    const personIds = [...new Set(ppRows.map(r=>r.person_id).filter(Boolean))];
-    const personDetails = {};
-    if (personIds.length) {
-      const pd = await api(`/rest/v1/person?person_id=in.(${personIds.join(',')})&select=person_id,display_name,last_name,first_name`);
-      pd.forEach(p => personDetails[p.person_id] = p);
-    }
-
-    renderDetail(pub, ppRows, piRows, srcRows?.[0], personDetails);
-  } catch(e) {
-    document.getElementById('right-panel').innerHTML = `<div class="no-selection">Feil: ${esc(e.message)}</div>`;
-  }
-}
-
-function renderDetail(pub, ppRows, piRows, src, personDetails) {
-  const pi = piRows[0];
-
-  const pubOptions = Object.entries(publishers).sort((a,b)=>a[1].localeCompare(b[1],'no'))
-    .map(([id,name])=>`<option value="${id}"${id==pub.publisher_id?' selected':''}>${esc(name)}</option>`).join('');
-
-  const instrOptions = `<option value="">—</option>` + Object.entries(instrumentation)
-    .sort((a,b)=>a[1].legacy_code.localeCompare(b[1].legacy_code))
-    .map(([id,i])=>`<option value="${id}"${id==pi?.instrumentation_id?' selected':''}>${esc(i.legacy_code)} — ${esc(i.description_no)}</option>`).join('');
-
-  const qualOptions = ['exact','circa','before','decade','range']
-    .map(q=>`<option value="${q}"${pub.year_qualifier===q?' selected':''}>${q}</option>`).join('');
-
-  // People blocks
-  const peopleHtml = ppRows.length ? ppRows.map(row => {
-    const p = row.person_id ? personDetails[row.person_id] : null;
-    const name = p ? (p.display_name || [p.last_name, p.first_name].filter(Boolean).join(', ')) : null;
-    const roleName = row.role_id ? (roles[row.role_id]||`role ${row.role_id}`) : '—';
-    const unresolved = !row.person_id;
-    return `
-    <div class="person-block${unresolved?' unresolved':''}" id="pb-${row.publication_person_id}">
-      <div class="person-block-header">
-        <div style="flex:1;min-width:0">
-          ${unresolved
-            ? `<div class="person-unresolved-label">⚠ Ukjent — kreditert som «${esc(row.credited_as||'')}»</div>`
-            : `<div class="person-name-display">${esc(name||'—')}</div>`}
-          ${row.credited_as && !unresolved ? `<div class="person-credited-as">Kreditert: ${esc(row.credited_as)}</div>` : ''}
-          ${row.notes ? `<div class="person-note">${esc(row.notes)}</div>` : ''}
-        </div>
-        <span class="role-badge">${esc(roleName)}</span>
-        <div class="person-actions">
-          ${!unresolved ? `<button class="btn btn-sm" onclick="togglePersonEdit(${row.publication_person_id}, false)">Rediger</button>` : ''}
-          <button class="btn btn-sm${unresolved?' btn-primary':''}" onclick="togglePersonEdit(${row.publication_person_id}, true)">
-            ${unresolved ? 'Tilknytt' : 'Bytt'}
-          </button>
-        </div>
-      </div>
-      <div class="person-edit-panel" id="pep-${row.publication_person_id}">
-        <div class="edit-hint">Søk etter eksisterende person, eller opprett ny.</div>
-        <div class="person-search-wrap">
-          <input class="field-input" id="psearch-${row.publication_person_id}"
-            placeholder="Søk person (etternavn)…"
-            autocomplete="off"
-            oninput="searchPersons(${row.publication_person_id}, this.value)">
-          <div class="person-search-results" id="psr-${row.publication_person_id}" style="display:none"></div>
-        </div>
-        <div class="person-new-form" id="pnf-${row.publication_person_id}">
-          <div class="person-new-grid">
-            <div class="field-group">
-              <label class="field-label">Etternavn *</label>
-              <input class="field-input" id="pnew-last-${row.publication_person_id}" placeholder="Etternavn">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Fornavn</label>
-              <input class="field-input" id="pnew-first-${row.publication_person_id}" placeholder="Fornavn eller initialer">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Type</label>
-              <select class="field-select" id="pnew-type-${row.publication_person_id}">
-                <option value="person">person</option>
-                <option value="anon">anon</option>
-                <option value="collection">collection</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Merknad</label>
-              <input class="field-input" id="pnew-notes-${row.publication_person_id}" placeholder="Valgfri merknad">
-            </div>
-          </div>
-          <div class="person-new-actions">
-            <button class="btn btn-save btn-sm" onclick="createAndLink(${row.publication_person_id})">Opprett og tilknytt</button>
-            <button class="btn btn-sm" onclick="hideNewForm(${row.publication_person_id})">Avbryt</button>
-          </div>
-        </div>
-        ${p && !unresolved ? `
-        <div style="margin-top:0.75rem;border-top:1px solid var(--faint);padding-top:0.75rem">
-          <div class="edit-hint">Rett navn på tilknyttet person (${esc(name)}):</div>
-          <div class="person-new-grid">
-            <div class="field-group">
-              <label class="field-label">Etternavn</label>
-              <input class="field-input" id="pedit-last-${row.publication_person_id}" value="${esc(p.last_name||'')}">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Fornavn</label>
-              <input class="field-input" id="pedit-first-${row.publication_person_id}" value="${esc(p.first_name||'')}">
-            </div>
-          </div>
-          <div class="person-new-actions">
-            <button class="btn btn-save btn-sm" onclick="savePersonName(${row.person_id}, ${row.publication_person_id})">Lagre navn</button>
-            <button class="btn btn-sm" onclick="togglePersonEdit(${row.publication_person_id}, false)">Avbryt</button>
-          </div>
-        </div>` : ''}
-      </div>
-    </div>`;
-  }).join('') : '<div style="font-size:0.82rem;color:var(--muted);font-style:italic">Ingen personer registrert.</div>';
-
-  // Raw source
-  const rawFields = [
-    ['Person', src?.person_raw], ['Rolle', src?.role_raw], ['Tittel', src?.title_raw],
-    ['Besetning', src?.instrumentation_raw], ['Forlag', src?.publisher_raw],
-    ['Platenr', src?.plate_number_raw], ['Utgivelsesår', src?.publication_year_raw],
-    ['Måned', src?.month_raw], ['Periodikum', src?.periodical_raw], ['Kommentar', src?.comment_raw],
-  ];
-  const rawHtml = rawFields.map(([k,v]) => {
-    const empty = v===null||v===undefined||v==='';
-    return `<tr><td class="rk">${esc(k)}</td><td class="rv${empty?' empty':''}">${empty?'—':esc(String(v))}</td></tr>`;
-  }).join('');
-
-  document.getElementById('right-panel').innerHTML = `
-    <div class="detail-header">
-      <div class="detail-id">Publikasjon #${pub.publication_id} · Kilde #${pub.primary_source_id}</div>
-      <div class="detail-title-display">${esc(pub.title||'—')}</div>
-      ${pub.subtitle?`<div class="detail-subtitle-display">${esc(pub.subtitle)}</div>`:''}
-      ${pub.is_edited?'<div class="edited-badge">✓ Redigert</div>':''}
-    </div>
-
-    <div class="edit-section">
-      <div class="edit-section-title">Tittel</div>
-      <div class="field-grid">
-        <div class="field-group field-full">
-          <label class="field-label">Tittel</label>
-          <input class="field-input" id="f-title" data-field="title" value="${esc(pub.title||'')}">
-        </div>
-        <div class="field-group field-full">
-          <label class="field-label">Undertittel</label>
-          <input class="field-input" id="f-subtitle" data-field="subtitle" value="${esc(pub.subtitle||'')}">
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-section">
-      <div class="edit-section-title">Utgivelse</div>
-      <div class="field-grid">
-        <div class="field-group">
-          <label class="field-label">Forlag</label>
-          <select class="field-select" id="f-publisher" data-field="publisher_id"><option value="">—</option>${pubOptions}</select>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Platenummer</label>
-          <input class="field-input" id="f-plate" data-field="plate_number" value="${esc(pub.plate_number||'')}">
-        </div>
-        <div class="field-group">
-          <label class="field-label">År</label>
-          <input class="field-input" id="f-year" data-field="year_issued" type="number" value="${pub.year_issued||''}">
-        </div>
-        <div class="field-group">
-          <label class="field-label">År slutt (range)</label>
-          <input class="field-input" id="f-year-end" data-field="year_issued_end" type="number" value="${pub.year_issued_end||''}">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Årstalltype</label>
-          <select class="field-select" id="f-qualifier" data-field="year_qualifier">${qualOptions}</select>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Måned</label>
-          <input class="field-input" id="f-month" data-field="month" value="${esc(pub.month||'')}">
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-section">
-      <div class="edit-section-title">Besetning</div>
-      <div class="field-grid">
-        <div class="field-group field-full">
-          <label class="field-label">Besetning</label>
-          <select class="field-select" id="f-instr" data-field="_instrumentation_id">${instrOptions}</select>
-        </div>
-        <div class="field-group field-full">
-          <label class="field-label">Rå besetningsstreng</label>
-          <input class="field-input" value="${esc(pi?.raw_instrumentation||'')}" disabled>
-        </div>
-      </div>
-    </div>
-
-    <div class="edit-section">
-      <div class="edit-section-title">Kommentarer</div>
-      <div class="field-group">
-        <textarea class="field-textarea" id="f-notes" data-field="composition_notes">${esc(pub.composition_notes||'')}</textarea>
-      </div>
-    </div>
-
-    <div class="edit-section">
-      <div class="edit-section-title">Personer</div>
-      ${peopleHtml}
-    </div>
-
-    <div class="edit-section">
-      <button class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('open')">
-        Kildedata (råoppføring) <span>▼</span>
-      </button>
-      <div class="raw-body">
-        <table class="raw-table">${rawHtml}</table>
-      </div>
-    </div>
-
-    <div class="save-bar">
-      <span class="save-status" id="save-status">Ingen endringer</span>
-      <button class="btn" onclick="loadDetail(${pub.publication_id})">Angre</button>
-      <button class="btn btn-save" onclick="saveChanges()">Lagre endringer</button>
-    </div>
-  `;
-
-  document.querySelectorAll('[data-field]').forEach(el => {
-    el.addEventListener('input',  () => onFieldChange(el));
-    el.addEventListener('change', () => onFieldChange(el));
+function post(path, body) {
+  db('POST '+path.substring(0,80));
+  return fetch(URL_+path, {method:'POST', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+    if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
+    return r.json();
   });
 }
 
-// ── Field change tracking ──────────────────────────────────
-function onFieldChange(el) {
-  changedFields[el.dataset.field] = el.value;
-  el.classList.add('changed');
-  const n = Object.keys(changedFields).length;
-  const s = document.getElementById('save-status');
-  if (s) { s.textContent = `${n} felt endret`; s.className = 'save-status'; }
+function loadRefs() {
+  db('Loading refs...');
+  return Promise.all([
+    get('/rest/v1/publisher?select=publisher_id,publisher_name&limit=1000'),
+    get('/rest/v1/instrumentation?select=instrumentation_id,legacy_code,description_no&limit=500'),
+    get('/rest/v1/role?select=role_id,role_name&limit=100')
+  ]).then(function(res) {
+    res[0].forEach(function(p){publishers[p.publisher_id]=p.publisher_name;});
+    res[1].forEach(function(i){instrs[i.instrumentation_id]=i;});
+    res[2].forEach(function(r){roles_[r.role_id]=r.role_name;});
+    db('Refs OK: '+res[0].length+' publishers, '+res[2].length+' roles');
+  }).catch(function(e){ db('Refs FAILED: '+e.message); });
 }
 
-// ── Save publication changes ───────────────────────────────
-async function saveChanges() {
-  if (!currentPub || !Object.keys(changedFields).length) return;
-  const pubId = currentPub.publication_id;
-  const now = new Date().toISOString();
-  const s = document.getElementById('save-status');
-  s.textContent = 'Lagrer…';
+function doSearch(unresolvedOnly) {
+  var title = document.getElementById('s-title').value.trim();
+  var id    = document.getElementById('s-id').value.trim();
+  var year  = document.getElementById('s-year').value.trim();
+  var pubQ  = document.getElementById('s-publisher').value.trim();
+  var perQ  = document.getElementById('s-person').value.trim();
 
-  const instrId  = changedFields['_instrumentation_id'];
-  const pubPatch = {};
-  for (const [k,v] of Object.entries(changedFields)) {
-    if (!k.startsWith('_')) pubPatch[k] = v===''?null:v;
+  document.getElementById('rc').textContent = 'Soker...';
+  document.getElementById('rl').innerHTML = '<div class="lm">Laster...</div>';
+
+  var chain = Promise.resolve({filters:[]});
+
+  if (pubQ) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/publisher?publisher_name=ilike.*'+encodeURIComponent(pubQ)+'*&select=publisher_id').then(function(rows) {
+        if (!rows || !rows.length) throw new Error('NORESULTS');
+        ctx.filters.push('publisher_id=in.('+rows.map(function(p){return p.publisher_id;}).join(',')+')');
+        return ctx;
+      });
+    });
   }
 
-  try {
-    if (Object.keys(pubPatch).length) {
-      let corrections = currentPub.corrections || {};
-      for (const [field, newVal] of Object.entries(pubPatch)) {
-        corrections[field] = { original: currentPub[field]??null, corrected: newVal, corrected_at: now.slice(0,10), corrected_by: 'EI' };
-      }
-      await api(`/rest/v1/publication?publication_id=eq.${pubId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ ...pubPatch, is_edited: true, corrected_at: now, corrected_by: 'EI', corrections }),
+  if (perQ) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/person?or=(last_name.ilike.*'+encodeURIComponent(perQ)+'*,display_name.ilike.*'+encodeURIComponent(perQ)+'*)&select=person_id&limit=200').then(function(pers) {
+        if (!pers || !pers.length) throw new Error('NORESULTS');
+        return get('/rest/v1/publication_person?person_id=in.('+pers.map(function(p){return p.person_id;}).join(',')+')'+'&select=publication_id&limit=2000').then(function(pp) {
+          var ids = [];
+          var seen = {};
+          (pp||[]).forEach(function(r){if(!seen[r.publication_id]){seen[r.publication_id]=1;ids.push(r.publication_id);}});
+          if (!ids.length) throw new Error('NORESULTS');
+          ctx.filters.push('publication_id=in.('+ids.join(',')+')');
+          return ctx;
+        });
       });
-    }
-    if (instrId !== undefined && currentPIRows[0]) {
-      await api(`/rest/v1/publication_instrumentation?publication_instrumentation_id=eq.${currentPIRows[0].publication_instrumentation_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ instrumentation_id: instrId===''?null:parseInt(instrId), is_edited: true, corrected_at: now, corrected_by: 'EI' }),
-      });
-    }
-    showToast('Lagret ✓');
-    changedFields = {};
-    await loadDetail(pubId);
-    document.querySelector(`.result-item[data-id="${pubId}"]`)?.classList.add('is-edited');
-  } catch(e) {
-    s.textContent = 'Feil: ' + e.message; s.className = 'save-status err';
-    showToast('Lagring feilet', true);
+    });
   }
+
+  if (unresolvedOnly) {
+    chain = chain.then(function(ctx) {
+      return get('/rest/v1/publication_person?person_id=is.null&notes=eq.Extracted%20from%20title&select=publication_id&limit=2000').then(function(rows) {
+        var ids = [];
+        var seen = {};
+        (rows||[]).forEach(function(r){if(!seen[r.publication_id]){seen[r.publication_id]=1;ids.push(r.publication_id);}});
+        if (!ids.length) throw new Error('NORESULTS');
+        ctx.filters.push('publication_id=in.('+ids.join(',')+')');
+        return ctx;
+      });
+    });
+  }
+
+  chain.then(function(ctx) {
+    var f = ctx.filters.slice();
+    if (id)    f.push('publication_id=eq.'+id);
+    if (title) f.push('title=ilike.*'+encodeURIComponent(title)+'*');
+    if (year)  f.push('year_issued=eq.'+year);
+    var qs = f.length ? f.join('&') : 'publication_id=gt.0';
+    return get('/rest/v1/publication?'+qs+'&select=publication_id,title,subtitle,year_issued,year_issued_end,year_qualifier,publisher_id,plate_number,is_edited&order=year_issued.asc,title.asc&limit=200');
+  }).then(function(rows) {
+    showResults(rows||[]);
+  }).catch(function(e) {
+    if (e.message === 'NORESULTS') { showResults([]); return; }
+    db('Search error: '+e.message);
+    document.getElementById('rc').textContent = 'Feil';
+    document.getElementById('rl').innerHTML = '<div class="es">'+esc(e.message)+'</div>';
+  });
 }
 
-// ── Person edit panel ──────────────────────────────────────
-function togglePersonEdit(ppId, show) {
-  const panel = document.getElementById(`pep-${ppId}`);
-  if (panel) panel.classList.toggle('open', show);
+function clearSearch() {
+  ['s-title','s-id','s-year','s-publisher','s-person'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('rl').innerHTML = '<div class="es">Bruk sokefeltet.</div>';
+  document.getElementById('rc').textContent = '—';
 }
 
-let personSearchTimer = null;
-async function searchPersons(ppId, query) {
-  clearTimeout(personSearchTimer);
-  const resultsEl = document.getElementById(`psr-${ppId}`);
-  if (!query || query.length < 2) { resultsEl.style.display = 'none'; return; }
-  personSearchTimer = setTimeout(async () => {
-    try {
-      const res = await api(`/rest/v1/person?or=(last_name.ilike.*${encodeURIComponent(query)}*,display_name.ilike.*${encodeURIComponent(query)}*,first_name.ilike.*${encodeURIComponent(query)}*)&select=person_id,display_name,last_name,first_name&order=last_name.asc&limit=20`);
-      resultsEl.innerHTML = res.map(p => {
-        const name = p.display_name || [p.last_name, p.first_name].filter(Boolean).join(', ');
-        return `<div class="psr-item" onclick="linkPerson(${ppId}, ${p.person_id}, '${esc(name)}')">${esc(name)} <span style="color:var(--muted);font-size:0.7rem">#${p.person_id}</span></div>`;
-      }).join('') + `<div class="psr-item create-new" onclick="showNewPersonForm(${ppId})">+ Opprett ny person «${esc(query)}»</div>`;
-      resultsEl.style.display = res.length || true ? 'block' : 'none';
-    } catch(e) { console.error(e); }
+function showResults(rows) {
+  document.getElementById('rc').textContent = rows.length === 0 ? 'Ingen treff' : rows.length >= 200 ? '200+ treff' : rows.length+' treff';
+  if (!rows.length) { document.getElementById('rl').innerHTML='<div class="es">Ingen treff.</div>'; return; }
+  document.getElementById('rl').innerHTML = rows.map(function(p) {
+    return '<div class="ri'+(p.is_edited?' edited':'')+'" data-id="'+p.publication_id+'">'
+      +'<div class="rid">#'+p.publication_id+'</div>'
+      +'<div class="rti">'+esc(p.title||'—')+'</div>'
+      +'<div class="rm">'+esc(publishers[p.publisher_id]||'—')+' · '+formatYear(p)+(p.plate_number?' · pl. '+esc(p.plate_number):'')+' </div>'
+      +'</div>';
+  }).join('');
+  document.querySelectorAll('.ri').forEach(function(el){
+    el.addEventListener('click', function(){loadDetail(parseInt(el.dataset.id));});
+  });
+}
+
+function loadDetail(pubId) {
+  document.querySelectorAll('.ri').forEach(function(el){el.classList.toggle('active',parseInt(el.dataset.id)===pubId);});
+  document.getElementById('rp').innerHTML = '<div class="lm" style="padding:2rem">Laster...</div>';
+  changed = {};
+  db('Loading pub #'+pubId);
+
+  Promise.all([
+    get('/rest/v1/publication?publication_id=eq.'+pubId+'&select=*'),
+    get('/rest/v1/publication_person?publication_id=eq.'+pubId+'&select=*&order=sequence_no.asc'),
+    get('/rest/v1/publication_instrumentation?publication_id=eq.'+pubId+'&select=*')
+  ]).then(function(res) {
+    var pub = (res[0]||[])[0];
+    if (!pub) throw new Error('Ikke funnet');
+    currentPub = pub; currentPP = res[1]||[]; currentPI = res[2]||[];
+    return Promise.all([
+      get('/rest/v1/source_import?source_id=eq.'+pub.primary_source_id+'&select=*'),
+      (function(){
+        var ids = currentPP.map(function(r){return r.person_id;}).filter(Boolean);
+        return ids.length ? get('/rest/v1/person?person_id=in.('+ids.join(',')+')'+'&select=person_id,display_name,last_name,first_name') : Promise.resolve([]);
+      })()
+    ]);
+  }).then(function(res2) {
+    var src = (res2[0]||[])[0];
+    var pd = {};
+    (res2[1]||[]).forEach(function(p){pd[p.person_id]=p;});
+    renderDetail(currentPub, currentPP, currentPI, src, pd);
+  }).catch(function(e){
+    db('Detail error: '+e.message);
+    document.getElementById('rp').innerHTML = '<div class="ns">Feil: '+esc(e.message)+'</div>';
+  });
+}
+
+function renderDetail(pub, pp, pi, src, pd) {
+  var piRow = pi[0];
+  var pubOpts = Object.entries(publishers).sort(function(a,b){return a[1].localeCompare(b[1],'no');}).map(function(e){return '<option value="'+e[0]+'"'+(e[0]==pub.publisher_id?' selected':'')+'>'+esc(e[1])+'</option>';}).join('');
+  var instrOpts = '<option value="">—</option>'+Object.entries(instrs).sort(function(a,b){return a[1].legacy_code.localeCompare(b[1].legacy_code);}).map(function(e){var sel=(piRow&&String(piRow.instrumentation_id)===String(e[0]))?' selected':'';return '<option value="'+e[0]+'"'+sel+'>'+esc(e[1].legacy_code)+' — '+esc(e[1].description_no)+'</option>';}).join('');
+  var qOpts = ['exact','circa','before','decade','range'].map(function(q){return '<option value="'+q+'"'+(pub.year_qualifier===q?' selected':'')+'>'+q+'</option>';}).join('');
+
+  var ppHtml = pp.length ? pp.map(function(row){
+    var p = row.person_id ? pd[row.person_id] : null;
+    var nm = p ? (p.display_name || [p.last_name,p.first_name].filter(Boolean).join(', ')) : null;
+    var rn = row.role_id ? (roles_[row.role_id]||'role '+row.role_id) : '—';
+    var ur = !row.person_id;
+    var pid = row.publication_person_id;
+    return '<div class="pb'+(ur?' ur':'')+'" id="pb'+pid+'">'
+      +'<div class="pbh">'
+        +'<div style="flex:1;min-width:0">'
+          +(ur?'<div class="pul">&#9888; Ukjent — kreditert som: '+esc(row.credited_as||'')+'</div>'
+              :'<div class="pnd">'+esc(nm||'—')+'</div>')
+          +(row.credited_as&&!ur?'<div class="pca">Kreditert: '+esc(row.credited_as)+'</div>':'')
+          +(row.notes?'<div class="pno">'+esc(row.notes)+'</div>':'')
+        +'</div>'
+        +'<span class="rb">'+esc(rn)+'</span>'
+        +'<div class="pa">'
+          +(!ur?'<button class="bts" id="pedit'+pid+'">Rediger</button>':'')
+          +'<button class="bts'+(ur?' btp':'')+'" id="plink'+pid+'">'+(ur?'Tilknytt':'Bytt')+'</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="pep" id="pep'+pid+'">'
+        +'<div class="eh">Sok etter eksisterende person, eller opprett ny.</div>'
+        +'<div class="psw">'
+          +'<input class="fi" id="ps'+pid+'" placeholder="Sok person (etternavn)..." autocomplete="off">'
+          +'<div class="psr" id="psr'+pid+'"></div>'
+        +'</div>'
+        +'<div class="pnf" id="pnf'+pid+'">'
+          +'<div class="png">'
+            +'<div class="fgr"><label class="fl">Etternavn *</label><input class="fi" id="pl'+pid+'" placeholder="Etternavn"></div>'
+            +'<div class="fgr"><label class="fl">Fornavn</label><input class="fi" id="pf'+pid+'" placeholder="Fornavn"></div>'
+            +'<div class="fgr"><label class="fl">Type</label><select class="fs" id="pt'+pid+'"><option value="person">person</option><option value="anon">anon</option><option value="collection">collection</option></select></div>'
+            +'<div class="fgr"><label class="fl">Merknad</label><input class="fi" id="pn'+pid+'" placeholder="Merknad"></div>'
+          +'</div>'
+          +'<div class="pna">'
+            +'<button class="bts bs" id="pcreate'+pid+'">Opprett og tilknytt</button>'
+            +'<button class="bts" id="pcancel'+pid+'">Avbryt</button>'
+          +'</div>'
+        +'</div>'
+        +(p&&!ur?'<div style="margin-top:.75rem;border-top:1px solid var(--faint);padding-top:.75rem">'
+          +'<div class="eh">Rett navn pa tilknyttet person ('+esc(nm)+'):</div>'
+          +'<div class="png">'
+            +'<div class="fgr"><label class="fl">Etternavn</label><input class="fi" id="eel'+pid+'" value="'+esc(p.last_name||'')+'"></div>'
+            +'<div class="fgr"><label class="fl">Fornavn</label><input class="fi" id="eef'+pid+'" value="'+esc(p.first_name||'')+'"></div>'
+          +'</div>'
+          +'<div class="pna">'
+            +'<button class="bts bs" id="esave'+pid+'">Lagre navn</button>'
+            +'<button class="bts" id="ecancel'+pid+'">Avbryt</button>'
+          +'</div>'
+        +'</div>':'')
+      +'</div>'
+    +'</div>';
+  }).join('') : '<div style="font-size:.82rem;color:var(--muted);font-style:italic">Ingen personer.</div>';
+
+  var rawFields = [['Person',src&&src.person_raw],['Rolle',src&&src.role_raw],['Tittel',src&&src.title_raw],['Besetning',src&&src.instrumentation_raw],['Forlag',src&&src.publisher_raw],['Platenr',src&&src.plate_number_raw],['Ar',src&&src.publication_year_raw],['Maned',src&&src.month_raw],['Periodikum',src&&src.periodical_raw],['Kommentar',src&&src.comment_raw]];
+  var rawHtml = rawFields.map(function(kv){var e=!kv[1]&&kv[1]!==0;return '<tr><td class="rk">'+esc(kv[0])+'</td><td class="rv'+(e?' em':'')+'">'+(e?'—':esc(String(kv[1])))+'</td></tr>';}).join('');
+
+  document.getElementById('rp').innerHTML =
+    '<div class="dh">'
+      +'<div class="did">Publikasjon #'+pub.publication_id+' · Kilde #'+pub.primary_source_id+'</div>'
+      +'<div class="dtd">'+esc(pub.title||'—')+'</div>'
+      +(pub.subtitle?'<div class="dsd">'+esc(pub.subtitle)+'</div>':'')
+      +(pub.is_edited?'<div class="eb">&#10003; Redigert</div>':'')
+    +'</div>'
+    +'<div class="es2"><div class="est">Tittel</div><div class="fg">'
+      +'<div class="fgr ff"><label class="fl">Tittel</label><input class="fi" id="f-title" data-field="title" value="'+esc(pub.title||'')+'"></div>'
+      +'<div class="fgr ff"><label class="fl">Undertittel</label><input class="fi" id="f-subtitle" data-field="subtitle" value="'+esc(pub.subtitle||'')+'"></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Utgivelse</div><div class="fg">'
+      +'<div class="fgr"><label class="fl">Forlag</label><select class="fs" id="f-pub" data-field="publisher_id"><option value="">—</option>'+pubOpts+'</select></div>'
+      +'<div class="fgr"><label class="fl">Platenummer</label><input class="fi" id="f-plate" data-field="plate_number" value="'+esc(pub.plate_number||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Ar</label><input class="fi" id="f-year" data-field="year_issued" type="number" value="'+(pub.year_issued||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Ar slutt</label><input class="fi" id="f-yend" data-field="year_issued_end" type="number" value="'+(pub.year_issued_end||'')+'"></div>'
+      +'<div class="fgr"><label class="fl">Arskvalifier</label><select class="fs" id="f-qual" data-field="year_qualifier">'+qOpts+'</select></div>'
+      +'<div class="fgr"><label class="fl">Maned</label><input class="fi" id="f-month" data-field="month" value="'+esc(pub.month||'')+'"></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Besetning</div><div class="fg">'
+      +'<div class="fgr ff"><label class="fl">Besetning</label><select class="fs" id="f-instr" data-field="_instr_id">'+instrOpts+'</select></div>'
+      +'<div class="fgr ff"><label class="fl">Ra besetningsstreng</label><input class="fi" value="'+esc(piRow&&piRow.raw_instrumentation||'')+'" disabled></div>'
+    +'</div></div>'
+    +'<div class="es2"><div class="est">Kommentarer</div>'
+      +'<textarea class="ft" id="f-notes" data-field="composition_notes">'+esc(pub.composition_notes||'')+'</textarea>'
+    +'</div>'
+    +'<div class="es2"><div class="est">Personer</div>'+ppHtml+'</div>'
+    +'<div class="es2">'
+      +'<button class="rt" id="raw-btn">Kildedata (raoppforing) <span>&#9660;</span></button>'
+      +'<div class="rb2" id="raw-body"><table class="rtb">'+rawHtml+'</table></div>'
+    +'</div>'
+    +'<div class="sb">'
+      +'<span class="ss" id="ss">Ingen endringer</span>'
+      +'<button class="btn" id="btn-undo">Angre</button>'
+      +'<button class="btn bs" id="btn-save">Lagre endringer</button>'
+    +'</div>';
+
+  // Attach field change listeners
+  document.querySelectorAll('[data-field]').forEach(function(el){
+    el.addEventListener('input',  function(){fieldChange(el);});
+    el.addEventListener('change', function(){fieldChange(el);});
+  });
+
+  // Save / undo buttons
+  document.getElementById('btn-save').addEventListener('click', saveChanges);
+  document.getElementById('btn-undo').addEventListener('click', function(){loadDetail(pub.publication_id);});
+
+  // Raw toggle
+  document.getElementById('raw-btn').addEventListener('click', function(){document.getElementById('raw-body').classList.toggle('open');});
+
+  // Person buttons
+  pp.forEach(function(row){
+    var pid = row.publication_person_id;
+    var linkBtn = document.getElementById('plink'+pid);
+    var editBtn = document.getElementById('pedit'+pid);
+    var cancelBtn = document.getElementById('pcancel'+pid);
+    var createBtn = document.getElementById('pcreate'+pid);
+    var psInput = document.getElementById('ps'+pid);
+    var esaveBtn = document.getElementById('esave'+pid);
+    var ecancelBtn = document.getElementById('ecancel'+pid);
+
+    if (linkBtn) linkBtn.addEventListener('click', function(){togglePEP(pid, true);});
+    if (editBtn) editBtn.addEventListener('click', function(){togglePEP(pid, true);});
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){document.getElementById('pnf'+pid).classList.remove('open');});
+    if (psInput) psInput.addEventListener('input', function(){personSearch(pid, psInput.value);});
+    if (createBtn) createBtn.addEventListener('click', function(){createAndLink(pid);});
+    if (esaveBtn) esaveBtn.addEventListener('click', function(){savePersonName(row.person_id, pid);});
+    if (ecancelBtn) ecancelBtn.addEventListener('click', function(){togglePEP(pid, false);});
+  });
+
+  db('Detail rendered for pub #'+pub.publication_id);
+}
+
+function fieldChange(el) {
+  changed[el.dataset.field] = el.value;
+  el.classList.add('ch');
+  var ss = document.getElementById('ss');
+  if (ss) { ss.textContent = Object.keys(changed).length+' felt endret'; ss.className='ss'; }
+}
+
+function saveChanges() {
+  if (!currentPub || !Object.keys(changed).length) return;
+  var pubId = currentPub.publication_id;
+  var now = new Date().toISOString();
+  var ss = document.getElementById('ss');
+  ss.textContent = 'Lagrer...';
+  var instrId = changed['_instr_id'];
+  var patch_ = {};
+  Object.keys(changed).forEach(function(k){if(k[0]!=='_') patch_[k]=changed[k]===''?null:changed[k];});
+  var corr = currentPub.corrections || {};
+  Object.keys(patch_).forEach(function(f){corr[f]={original:currentPub[f]!=null?currentPub[f]:null,corrected:patch_[f],corrected_at:now.slice(0,10),corrected_by:'EI'};});
+  var chain = Object.keys(patch_).length
+    ? patch('/rest/v1/publication?publication_id=eq.'+pubId, Object.assign({},patch_,{is_edited:true,corrected_at:now,corrected_by:'EI',corrections:corr}))
+    : Promise.resolve();
+  if (instrId !== undefined && currentPI[0]) {
+    chain = chain.then(function(){
+      return patch('/rest/v1/publication_instrumentation?publication_instrumentation_id=eq.'+currentPI[0].publication_instrumentation_id, {instrumentation_id:instrId===''?null:parseInt(instrId),is_edited:true,corrected_at:now,corrected_by:'EI'});
+    });
+  }
+  chain.then(function(){
+    toast('Lagret');
+    changed = {};
+    loadDetail(pubId);
+    var ri = document.querySelector('.ri[data-id="'+pubId+'"]');
+    if (ri) ri.classList.add('edited');
+  }).catch(function(e){
+    ss.textContent='Feil: '+e.message; ss.className='ss er';
+    toast(e.message, true);
+  });
+}
+
+function togglePEP(pid, show) {
+  var el = document.getElementById('pep'+pid);
+  if (el) el.classList.toggle('open', show);
+}
+
+var psTimer = null;
+function personSearch(pid, q) {
+  clearTimeout(psTimer);
+  var el = document.getElementById('psr'+pid);
+  if (!q || q.length < 2) { el.style.display='none'; return; }
+  psTimer = setTimeout(function(){
+    get('/rest/v1/person?or=(last_name.ilike.*'+encodeURIComponent(q)+'*,display_name.ilike.*'+encodeURIComponent(q)+'*)&select=person_id,display_name,last_name,first_name&order=last_name.asc&limit=20').then(function(rows){
+      el.innerHTML = (rows||[]).map(function(p){
+        var nm = p.display_name || [p.last_name,p.first_name].filter(Boolean).join(', ');
+        return '<div class="psi" data-pid="'+p.person_id+'" data-nm="'+esc(nm)+'">'+esc(nm)+' <span style="color:var(--muted);font-size:.7rem">#'+p.person_id+'</span></div>';
+      }).join('')+'<div class="psi cn" data-new="1">+ Opprett ny: '+esc(q)+'</div>';
+      el.style.display='block';
+      el.querySelectorAll('.psi').forEach(function(item){
+        item.addEventListener('click', function(){
+          if (item.dataset.new) { showNewPersonForm(pid, q); return; }
+          linkPerson(pid, parseInt(item.dataset.pid), item.dataset.nm);
+        });
+      });
+    }).catch(function(e){db('Person search error: '+e.message);});
   }, 250);
 }
 
-function showNewPersonForm(ppId) {
-  document.getElementById(`psr-${ppId}`).style.display = 'none';
-  const form = document.getElementById(`pnf-${ppId}`);
-  if (form) { form.classList.add('open'); }
-  // Pre-fill from search box
-  const q = document.getElementById(`psearch-${ppId}`)?.value || '';
-  const lastEl = document.getElementById(`pnew-last-${ppId}`);
+function showNewPersonForm(pid, q) {
+  document.getElementById('psr'+pid).style.display='none';
+  document.getElementById('pnf'+pid).classList.add('open');
+  var lastEl = document.getElementById('pl'+pid);
   if (lastEl && q) lastEl.value = q;
 }
 
-function hideNewForm(ppId) {
-  const form = document.getElementById(`pnf-${ppId}`);
-  if (form) form.classList.remove('open');
+function linkPerson(pid, personId, nm) {
+  document.getElementById('psr'+pid).style.display='none';
+  var now = new Date().toISOString();
+  patch('/rest/v1/publication_person?publication_person_id=eq.'+pid, {
+    person_id:personId, is_edited:true, corrected_at:now, corrected_by:'EI',
+    corrections:{person_id:{original:null,corrected:personId,corrected_at:now.slice(0,10),corrected_by:'EI'}}
+  }).then(function(){
+    toast('Tilknyttet: '+nm);
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
 }
 
-async function linkPerson(ppId, personId, personName) {
-  document.getElementById(`psr-${ppId}`).style.display = 'none';
-  try {
-    const now = new Date().toISOString();
-    await api(`/rest/v1/publication_person?publication_person_id=eq.${ppId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ person_id: personId, is_edited: true, corrected_at: now, corrected_by: 'EI',
-        corrections: { person_id: { original: null, corrected: personId, corrected_at: now.slice(0,10), corrected_by: 'EI' } } }),
+function createAndLink(pid) {
+  var last  = (document.getElementById('pl'+pid)||{}).value;
+  var first = (document.getElementById('pf'+pid)||{}).value;
+  var type_ = (document.getElementById('pt'+pid)||{}).value || 'person';
+  var notes = (document.getElementById('pn'+pid)||{}).value;
+  last  = last  ? last.trim()  : '';
+  first = first ? first.trim() : '';
+  notes = notes ? notes.trim() : '';
+  if (!last) { toast('Etternavn er pakrevd', true); return; }
+  var disp = first ? last+', '+first : last;
+  var now = new Date().toISOString();
+  post('/rest/v1/person', {last_name:last,first_name:first||null,display_name:disp,person_type:type_,notes:notes||null}).then(function(res){
+    var personId = res[0].person_id;
+    return patch('/rest/v1/publication_person?publication_person_id=eq.'+pid, {
+      person_id:personId, is_edited:true, corrected_at:now, corrected_by:'EI',
+      corrections:{person_id:{original:null,corrected:personId,corrected_at:now.slice(0,10),corrected_by:'EI'}}
     });
-    showToast(`Tilknyttet: ${personName}`);
-    await loadDetail(currentPub.publication_id);
-  } catch(e) { showToast('Feil: ' + e.message, true); }
+  }).then(function(){
+    toast('Opprettet og tilknyttet: '+disp);
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
 }
 
-async function createAndLink(ppId) {
-  const lastName  = document.getElementById(`pnew-last-${ppId}`)?.value.trim();
-  const firstName = document.getElementById(`pnew-first-${ppId}`)?.value.trim() || null;
-  const pType     = document.getElementById(`pnew-type-${ppId}`)?.value || 'person';
-  const notes     = document.getElementById(`pnew-notes-${ppId}`)?.value.trim() || null;
-
-  if (!lastName) { showToast('Etternavn er påkrevd', true); return; }
-
-  const displayName = firstName ? `${lastName}, ${firstName}` : lastName;
-  try {
-    const now = new Date().toISOString();
-    const newPerson = await api('/rest/v1/person', {
-      method: 'POST',
-      body: JSON.stringify({ last_name: lastName, first_name: firstName, display_name: displayName, person_type: pType, notes }),
-    });
-    const personId = newPerson[0].person_id;
-    await api(`/rest/v1/publication_person?publication_person_id=eq.${ppId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ person_id: personId, is_edited: true, corrected_at: now, corrected_by: 'EI',
-        corrections: { person_id: { original: null, corrected: personId, corrected_at: now.slice(0,10), corrected_by: 'EI' } } }),
-    });
-    showToast(`Opprettet og tilknyttet: ${displayName}`);
-    await loadDetail(currentPub.publication_id);
-  } catch(e) { showToast('Feil: ' + e.message, true); }
+function savePersonName(personId, pid) {
+  var last  = (document.getElementById('eel'+pid)||{}).value || '';
+  var first = (document.getElementById('eef'+pid)||{}).value || '';
+  last = last.trim(); first = first.trim();
+  if (!last) { toast('Etternavn er pakrevd', true); return; }
+  var disp = first ? last+', '+first : last;
+  var now = new Date().toISOString();
+  patch('/rest/v1/person?person_id=eq.'+personId, {last_name:last,first_name:first||null,display_name:disp,is_edited:true,corrected_at:now,corrected_by:'EI'}).then(function(){
+    toast('Navn lagret');
+    loadDetail(currentPub.publication_id);
+  }).catch(function(e){toast(e.message,true);});
 }
 
-async function savePersonName(personId, ppId) {
-  const lastName  = document.getElementById(`pedit-last-${ppId}`)?.value.trim();
-  const firstName = document.getElementById(`pedit-first-${ppId}`)?.value.trim() || null;
-  if (!lastName) { showToast('Etternavn er påkrevd', true); return; }
-  const displayName = firstName ? `${lastName}, ${firstName}` : lastName;
-  try {
-    const now = new Date().toISOString();
-    await api(`/rest/v1/person?person_id=eq.${personId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ last_name: lastName, first_name: firstName, display_name: displayName,
-        is_edited: true, corrected_at: now, corrected_by: 'EI' }),
-    });
-    showToast('Navn lagret ✓');
-    await loadDetail(currentPub.publication_id);
-  } catch(e) { showToast('Feil: ' + e.message, true); }
-}
-
-// ── Event listeners ────────────────────────────────────────
-document.getElementById('btn-search').addEventListener('click', () => doSearch(false));
-document.getElementById('btn-unresolved').addEventListener('click', () => doSearch(true));
-document.getElementById('btn-clear').addEventListener('click', () => {
-  ['s-title','s-id','s-year','s-publisher','s-person'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('results-list').innerHTML = '<div class="empty-state">Bruk søkefeltet for å finne publikasjoner.</div>';
-  document.getElementById('result-count').textContent = '—';
-});
-document.querySelectorAll('.search-input').forEach(el =>
-  el.addEventListener('keydown', e => { if (e.key==='Enter') doSearch(false); })
-);
-
-// Close person search dropdown on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('.person-search-wrap')) {
-    document.querySelectorAll('.person-search-results').forEach(el => el.style.display='none');
+// Close person search on outside click
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.psw')) {
+    document.querySelectorAll('.psr').forEach(function(el){el.style.display='none';});
   }
 });
 
-loadRefTables().catch(e => showToast('Feil ved lasting: ' + e.message, true));
+// Wire up main buttons
+document.getElementById('btn-search').addEventListener('click', function(){doSearch(false);});
+document.getElementById('btn-clear').addEventListener('click', clearSearch);
+document.getElementById('btn-unresolved').addEventListener('click', function(){doSearch(true);});
+document.querySelectorAll('.si').forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch(false);});});
+
+// Init
+db('Wiring done, loading refs...');
+loadRefs();
 </script>
 </body>
 </html>
