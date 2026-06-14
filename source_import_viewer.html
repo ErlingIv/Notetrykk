@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Norske Notetrykk — Kildedata</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #1a1714;
+    --paper:     #f7f4ef;
+    --rule:      #c8bfb0;
+    --accent:    #7a5c3a;
+    --accent2:   #3a5c7a;
+    --muted:     #8a7f74;
+    --hover-bg:  #ede8e0;
+    --sorted-bg: #f0eae0;
+    --font-disp: 'Playfair Display', Georgia, serif;
+    --font-body: 'Source Serif 4', Georgia, serif;
+    --font-data: 'Source Serif 4', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 24px 32px 16px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: var(--font-disp);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  #row-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── Controls ── */
+  #controls {
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--paper);
+  }
+  #controls input, #controls select {
+    font-family: var(--font-body);
+    font-size: 12px;
+    background: white;
+    border: 1px solid var(--rule);
+    padding: 5px 10px;
+    color: var(--ink);
+    outline: none;
+  }
+  #controls input:focus, #controls select:focus {
+    border-color: var(--accent);
+  }
+  #search { width: 260px; }
+  #controls label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #clear-btn {
+    font-family: var(--font-body);
+    font-size: 11px;
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 5px 12px;
+    cursor: pointer;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  #clear-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Status ── */
+  #status {
+    padding: 10px 32px;
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    min-height: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* ── Table wrapper ── */
+  #table-wrapper {
+    padding: 0 0 40px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  /* ── Column headers ── */
+  thead th {
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
+    border-right: 1px solid var(--rule);
+    padding: 8px 10px;
+    text-align: left;
+    font-family: var(--font-disp);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+  }
+  thead th:last-child { border-right: none; }
+  thead th:hover { background: var(--hover-bg); }
+  thead th.sorted-asc::after  { content: ' ↑'; color: var(--accent); }
+  thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+  thead th.sorted-asc, thead th.sorted-desc { background: var(--sorted-bg); }
+
+  /* ── Rows ── */
+  tbody tr { border-bottom: 1px solid var(--rule); }
+  tbody tr:hover td { background: var(--hover-bg); }
+  tbody td {
+    padding: 5px 10px;
+    vertical-align: top;
+    border-right: 1px solid var(--rule);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  tbody td:last-child { border-right: none; }
+  tbody td.wrap { white-space: normal; max-width: 340px; }
+
+  /* ID column */
+  td.col-id { color: var(--muted); font-size: 11px; text-align: right; }
+
+  /* year column */
+  td.col-year { font-variant-numeric: tabular-nums; }
+
+  /* highlighted search match */
+  mark {
+    background: #f5e4a0;
+    color: inherit;
+    padding: 0 1px;
+  }
+
+  /* ── Loading / error ── */
+  #loading {
+    padding: 60px 32px;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  #error-msg {
+    padding: 20px 32px;
+    color: #8b2020;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Norske Notetrykk — Kildedata</h1>
+  <span id="row-count"></span>
+</header>
+
+<div id="controls">
+  <label for="search">Søk</label>
+  <input id="search" type="text" placeholder="Person, tittel, forlag, år …" autocomplete="off">
+  <label for="filter-year">År</label>
+  <input id="filter-year" type="text" placeholder="f.eks. 1828" style="width:90px">
+  <label for="filter-publisher">Forlag</label>
+  <select id="filter-publisher"><option value="">— alle —</option></select>
+  <label for="filter-instr">Besetning</label>
+  <select id="filter-instr"><option value="">— alle —</option></select>
+  <button id="clear-btn">Nullstill</button>
+</div>
+
+<div id="status"></div>
+<div id="loading">Laster kildedata …</div>
+<div id="error-msg"></div>
+
+<div id="table-wrapper" style="display:none">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th data-col="source_id">ID</th>
+        <th data-col="person_raw">Person</th>
+        <th data-col="role_raw">Rolle</th>
+        <th data-col="title_raw">Tittel</th>
+        <th data-col="instrumentation_raw">Besetning</th>
+        <th data-col="publisher_raw">Forlag</th>
+        <th data-col="plate_number_raw">Platenr</th>
+        <th data-col="publication_year_raw">År</th>
+        <th data-col="month_raw">Måned</th>
+        <th data-col="periodical_raw">Periodikum</th>
+        <th data-col="comment_raw">Kommentar</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const PAGE_SIZE    = 500; // rows per fetch
+
+const COLS = [
+  'source_id','person_raw','role_raw','title_raw','instrumentation_raw',
+  'publisher_raw','plate_number_raw','publication_year_raw',
+  'month_raw','periodical_raw','comment_raw'
+];
+
+let allRows    = [];
+let filtered   = [];
+let sortCol    = 'source_id';
+let sortDir    = 1; // 1 asc, -1 desc
+
+// ── Fetch all rows via pagination ──
+async function fetchAll() {
+  let rows = [];
+  let from = 0;
+  while (true) {
+    const url = `${SUPABASE_URL}/rest/v1/source_import`
+      + `?select=${COLS.join(',')}`
+      + `&order=source_id.asc`
+      + `&limit=${PAGE_SIZE}&offset=${from}`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    const batch = await res.json();
+    rows = rows.concat(batch);
+    document.getElementById('loading').textContent =
+      `Laster kildedata … ${rows.length} rader`;
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return rows;
+}
+
+// ── Populate filter dropdowns ──
+function populateFilters(rows) {
+  const publishers = [...new Set(rows.map(r => r.publisher_raw).filter(Boolean))].sort();
+  const instrs     = [...new Set(rows.map(r => r.instrumentation_raw).filter(Boolean))].sort();
+  const pSel = document.getElementById('filter-publisher');
+  const iSel = document.getElementById('filter-instr');
+  publishers.forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p; pSel.appendChild(o); });
+  instrs.forEach(i     => { const o = document.createElement('option'); o.value = o.textContent = i; iSel.appendChild(o); });
+}
+
+// ── Apply filters + search ──
+function applyFilters() {
+  const q   = document.getElementById('search').value.trim().toLowerCase();
+  const yr  = document.getElementById('filter-year').value.trim();
+  const pub = document.getElementById('filter-publisher').value;
+  const ins = document.getElementById('filter-instr').value;
+
+  filtered = allRows.filter(r => {
+    if (pub && r.publisher_raw !== pub) return false;
+    if (ins && r.instrumentation_raw !== ins) return false;
+    if (yr  && !(r.publication_year_raw || '').includes(yr)) return false;
+    if (q) {
+      const hay = COLS.map(c => (r[c] || '')).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  applySort();
+}
+
+// ── Sort ──
+function applySort() {
+  filtered.sort((a, b) => {
+    const av = (a[sortCol] || '').toString();
+    const bv = (b[sortCol] || '').toString();
+    return av.localeCompare(bv, 'no') * sortDir;
+  });
+  renderTable();
+}
+
+// ── Highlight matches ──
+function highlight(text, q) {
+  if (!q || !text) return escHtml(text || '');
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escHtml(text).replace(new RegExp(escaped, 'gi'), m => `<mark>${m}</mark>`);
+}
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Render rows ──
+function renderTable() {
+  const q    = document.getElementById('search').value.trim().toLowerCase();
+  const tbody = document.getElementById('table-body');
+  const frag  = document.createDocumentFragment();
+
+  // Show max 2000 rows for performance
+  const visible = filtered.slice(0, 2000);
+
+  visible.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = [
+      `<td class="col-id">${r.source_id}</td>`,
+      `<td>${highlight(r.person_raw, q)}</td>`,
+      `<td>${highlight(r.role_raw, q)}</td>`,
+      `<td class="wrap">${highlight(r.title_raw, q)}</td>`,
+      `<td>${highlight(r.instrumentation_raw, q)}</td>`,
+      `<td>${highlight(r.publisher_raw, q)}</td>`,
+      `<td>${escHtml(r.plate_number_raw || '')}</td>`,
+      `<td class="col-year">${escHtml(r.publication_year_raw || '')}</td>`,
+      `<td>${escHtml(r.month_raw || '')}</td>`,
+      `<td>${highlight(r.periodical_raw, q)}</td>`,
+      `<td class="wrap">${highlight(r.comment_raw, q)}</td>`,
+    ].join('');
+    frag.appendChild(tr);
+  });
+
+  tbody.innerHTML = '';
+  tbody.appendChild(frag);
+
+  const total = filtered.length;
+  const shown = Math.min(total, 2000);
+  document.getElementById('status').textContent =
+    total === allRows.length
+      ? `${total.toLocaleString('no')} rader totalt`
+      : `${shown.toLocaleString('no')} av ${total.toLocaleString('no')} filtrerte rader vist${total > 2000 ? ' (maks 2 000 vist — innsnevre søket)' : ''}`;
+  document.getElementById('row-count').textContent =
+    `${allRows.length.toLocaleString('no')} rader`;
+}
+
+// ── Column sort click ──
+document.querySelectorAll('thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) { sortDir *= -1; }
+    else { sortCol = col; sortDir = 1; }
+    document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted-asc','sorted-desc'));
+    th.classList.add(sortDir === 1 ? 'sorted-asc' : 'sorted-desc');
+    applySort();
+  });
+});
+
+// ── Filter listeners ──
+['search','filter-year','filter-publisher','filter-instr'].forEach(id => {
+  document.getElementById(id).addEventListener('input', applyFilters);
+});
+document.getElementById('clear-btn').addEventListener('click', () => {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-year').value = '';
+  document.getElementById('filter-publisher').value = '';
+  document.getElementById('filter-instr').value = '';
+  applyFilters();
+});
+
+// ── Fix sticky header offset ──
+function updateStickyOffset() {
+  const h = document.getElementById('controls').offsetHeight
+          + document.getElementById('status').offsetHeight;
+  document.documentElement.style.setProperty('--controls-height', h + 'px');
+}
+
+// ── Init ──
+(async () => {
+  try {
+    allRows = await fetchAll();
+    populateFilters(allRows);
+    filtered = [...allRows];
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('table-wrapper').style.display = 'block';
+    applyFilters();
+    updateStickyOffset();
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error-msg');
+    err.style.display = 'block';
+    err.textContent = 'Feil ved lasting: ' + e.message;
+  }
+})();
+</script>
+</body>
+</html>
