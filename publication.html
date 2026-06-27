@@ -233,7 +233,7 @@ async function load() {
         <div class="meta-grid">
           ${metaItems.map(m=>`<div class="meta-item"><div class="meta-label">${m.label}</div><div class="meta-value">${m.value}</div></div>`).join('')}
         </div>
-        <a class="edit-link" href="publication_review.html">✏ Rediger i gjennomgangsverktøy</a>
+        <a class="edit-link" href="publication_review.html?id=${pub.publication_id}">✏ Rediger i gjennomgangsverktøy</a>
       </div>
       ${peopleHtml}
       ${periodicalHtml}

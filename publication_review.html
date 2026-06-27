@@ -104,11 +104,7 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 </style>
 </head>
 <body>
-<div style="position:fixed;top:0;left:0;right:0;z-index:999;background:#c00;color:#fff;padding:8px;font-family:monospace;font-size:13px;display:flex;gap:10px;align-items:center">
-  <span id="js-status">JS NOT RUNNING</span>
-  <button onclick="document.getElementById('js-status').textContent='JS OK - onclick works'; document.getElementById('s-title').value='';" style="background:#fff;color:#000;border:none;padding:4px 8px;cursor:pointer">Test JS</button>
-</div>
-<script>document.getElementById('js-status').textContent='JS running (inline script)';</script>
+
 <div class="app">
 <div class="left">
   <div class="ph">
@@ -189,6 +185,8 @@ function loadRefs() {
     res[1].forEach(function(i){instrs[i.instrumentation_id]=i;});
     res[2].forEach(function(r){roles_[r.role_id]=r.role_name;});
     db('Refs OK: '+res[0].length+' publishers, '+res[2].length+' roles');
+    var urlId = new URLSearchParams(window.location.search).get('id');
+    if (urlId) { loadDetail(parseInt(urlId)); }
   }).catch(function(e){ db('Refs FAILED: '+e.message); });
 }
 
