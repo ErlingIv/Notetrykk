@@ -101,14 +101,35 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 .toast.show{opacity:1}
 .toast.err{background:var(--accent)}
 #db{background:#111;color:#9f9;font-size:.72rem;padding:.35rem 1rem;font-family:monospace;position:fixed;bottom:0;left:0;right:0;z-index:200}
+.modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:500;display:flex;align-items:center;justify-content:center}
+.modal-overlay.hidden{display:none}
+.modal-box{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:2rem;width:min(420px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-title{font-family:var(--serif);font-size:1.2rem;font-weight:700;margin-bottom:.4rem}
+.modal-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.6}
+.modal-input{width:100%;font-family:monospace;font-size:.82rem;background:var(--bg);border:1px solid var(--border);color:var(--ink);padding:.5rem .75rem;outline:none;margin-bottom:.75rem;border-radius:4px}
+.modal-input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:.5rem;justify-content:flex-end}
+.key-badge{font-size:.68rem;padding:2px 8px;border-radius:3px;border:1px solid var(--accent2);color:var(--accent2);background:#e8f0ea;cursor:pointer;margin-left:.5rem;vertical-align:middle}
+.key-badge:hover{background:#d0e8d8}
 </style>
 </head>
 <body>
 
+<!-- Service key modal -->
+<div class="modal-overlay hidden" id="key-modal">
+  <div class="modal-box">
+    <div class="modal-title">Skriv inn tjenestenøkkel</div>
+    <div class="modal-sub">Gjennomgangsverktøyet trenger Supabase service role-nøkkelen for å lagre endringer. Nøkkelen lagres lokalt i nettleseren og sendes aldri videre.</div>
+    <input class="modal-input" id="key-input" type="password" placeholder="eyJ...">
+    <div class="modal-actions">
+      <button class="btn bp" id="key-save-btn">Lagre nøkkel</button>
+    </div>
+  </div>
+</div>
 <div class="app">
 <div class="left">
   <div class="ph">
-    <div class="pt">Norske Notetrykk <span>/ Gjennomgang</span></div>
+    <div class="pt" style="display:flex;align-items:center">Norske Notetrykk <span style="margin-left:.3rem">/ Gjennomgang</span><button class="key-badge" id="key-badge-btn" title="Endre tjenestenøkkel">🔑 Nøkkel</button></div>
     <div class="sg">
       <div class="sf"><label class="sl">Tittel</label><input class="si" id="s-title" placeholder="Søk i tittel..." autocomplete="off"></div>
       <div><label class="sl">ID</label><input class="si" id="s-id" placeholder="42" type="number"></div>
@@ -133,8 +154,23 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 <script>
 var URL_ = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
 var KEY_ = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+var SERVICE_KEY_STORAGE = 'notetrykk_service_key';
+
+function getServiceKey() { return localStorage.getItem(SERVICE_KEY_STORAGE) || ''; }
+function setServiceKey(k) { localStorage.setItem(SERVICE_KEY_STORAGE, k.trim()); }
+function clearServiceKey() { localStorage.removeItem(SERVICE_KEY_STORAGE); }
+
+// Read headers always use publishable key
 var HEAD = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_ };
-var HEAD_W = { 'apikey': KEY_, 'Authorization': 'Bearer ' + KEY_, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+// Write headers dynamically use service key
+function HEAD_W() {
+  var sk = getServiceKey();
+  return { 'apikey': sk, 'Authorization': 'Bearer ' + sk, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+}
+function requireServiceKey() {
+  if (!getServiceKey()) { showKeyModal(); return false; }
+  return true;
+}
 
 var currentPub = null, currentPP = [], currentPI = [];
 var publishers = {}, instrs = {}, roles_ = {}, changed = {};
@@ -161,14 +197,14 @@ function get(path) {
 }
 function patch(path, body) {
   db('PATCH '+path.substring(0,80));
-  return fetch(URL_+path, {method:'PATCH', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+  return fetch(URL_+path, {method:'PATCH', headers:HEAD_W(), body:JSON.stringify(body)}).then(function(r){
     if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
     return r.json();
   });
 }
 function post(path, body) {
   db('POST '+path.substring(0,80));
-  return fetch(URL_+path, {method:'POST', headers:HEAD_W, body:JSON.stringify(body)}).then(function(r){
+  return fetch(URL_+path, {method:'POST', headers:HEAD_W(), body:JSON.stringify(body)}).then(function(r){
     if (!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t.substring(0,150));});
     return r.json();
   });
@@ -455,6 +491,7 @@ function fieldChange(el) {
 
 function saveChanges() {
   if (!currentPub || !Object.keys(changed).length) return;
+  if (!requireServiceKey()) return;
   var pubId = currentPub.publication_id;
   var now = new Date().toISOString();
   var ss = document.getElementById('ss');
@@ -519,6 +556,7 @@ function showNewPersonForm(pid, q) {
 }
 
 function linkPerson(pid, personId, nm) {
+  if (!requireServiceKey()) return;
   document.getElementById('psr'+pid).style.display='none';
   var now = new Date().toISOString();
   patch('/rest/v1/publication_person?publication_person_id=eq.'+pid, {
@@ -531,6 +569,7 @@ function linkPerson(pid, personId, nm) {
 }
 
 function createAndLink(pid) {
+  if (!requireServiceKey()) return;
   var last  = (document.getElementById('pl'+pid)||{}).value;
   var first = (document.getElementById('pf'+pid)||{}).value;
   var type_ = (document.getElementById('pt'+pid)||{}).value || 'person';
@@ -573,6 +612,40 @@ document.addEventListener('click', function(e){
   }
 });
 
+// Key modal
+function showKeyModal() {
+  document.getElementById('key-modal').classList.remove('hidden');
+  document.getElementById('key-input').value = '';
+  setTimeout(function(){ document.getElementById('key-input').focus(); }, 50);
+}
+function hideKeyModal() {
+  document.getElementById('key-modal').classList.add('hidden');
+}
+document.getElementById('key-save-btn').addEventListener('click', function(){
+  var k = document.getElementById('key-input').value.trim();
+  if (!k) { toast('Skriv inn nøkkel', true); return; }
+  setServiceKey(k);
+  hideKeyModal();
+  updateKeyBadge();
+  toast('Nøkkel lagret');
+});
+document.getElementById('key-input').addEventListener('keydown', function(e){
+  if (e.key==='Enter') document.getElementById('key-save-btn').click();
+});
+document.getElementById('key-badge-btn').addEventListener('click', showKeyModal);
+function updateKeyBadge() {
+  var btn = document.getElementById('key-badge-btn');
+  if (getServiceKey()) {
+    btn.textContent = '🔑 Nøkkel OK';
+    btn.style.borderColor = 'var(--accent2)';
+  } else {
+    btn.textContent = '🔑 Ingen nøkkel';
+    btn.style.borderColor = '#c8a84b';
+    btn.style.color = '#7a5c2a';
+    btn.style.background = '#fdf6e3';
+  }
+}
+
 // Wire up main buttons
 document.getElementById('btn-search').addEventListener('click', function(){doSearch(false);});
 document.getElementById('btn-clear').addEventListener('click', clearSearch);
@@ -581,6 +654,8 @@ document.querySelectorAll('.si').forEach(function(el){el.addEventListener('keydo
 
 // Init
 db('Wiring done, loading refs...');
+updateKeyBadge();
+if (!getServiceKey()) { showKeyModal(); }
 loadRefs();
 </script>
 </body>
