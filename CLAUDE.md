@@ -1,260 +1,372 @@
-# Musikk Katalog Database - Claude Code Context
+# Notetrykk — Claude Code Context
 
 ## Project Overview
 
 Norwegian historical music catalogue database. Sheet music metadata from Norwegian/Nordic publishers,
-primarily 1800s–early 1900s. Source data from University of Oslo (hf.uio.no).
+primarily 1811–1908. Source data from University of Oslo (hf.uio.no).
 Separate from the live music scores project (Supabase project: tfqnzszyjsdgdeksizel).
 
-## Infrastructure
+**Current status**: Stage 1 import complete (6,922 rows in source_import). Stage 2 in progress —
+authority tables populated, publication import pending.
 
-- **Supabase**: Separate project from live music database
-- **PostgreSQL schema**: `public` (own project, no prefix needed)
-- **Table names**: ALL LOWERCASE in REST API
-- **Frontend**: To be built — separate HTML/JS files, own `SUPABASE_URL` and `SUPABASE_KEY`
+## File Locations
+
+- **Stager script**: `notetrykk_stager.py` — stages raw UiO data into source_import
+- **Person extract**: `notetrykk_persons_extract.py` — extracts persons from source_import
+- **Person import**: `notetrykk_persons_import.py` — imports corrected persons from Excel
+- **Person review**: `persons_review.xlsx` — tier 3 persons needing manual correction
+- **Flags file**: `stage2_flags.txt` — running log of unknowns across all batches
+- **Supabase URL**: `https://lmsqnyssnxsiibnyguxy.supabase.co`
+- **Frontend publishable key**: `sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO`
+- **Secret key for imports**: stored in `notetrykk_importer.py` — do not overwrite
+
+-----
+
+## Stage 1 Workflow: Stager Script
+
+The stager (`notetrykk_stager.py`) inserts raw UiO tab-separated data into `source_import`.
+
+```bash
+py notetrykk_stager.py new_rows.txt
+```
+
+**Key behaviour:**
+- Inserts `None` (NULL) for empty fields — never empty strings
+- Deduplicates via unique constraint on all 10 content fields
+- Report written to `stager_report.txt`
+- Stage 1 is complete — stager only needed if source data corrections arise
+
+-----
+
+## source_import Column Names
+
+The raw staging table uses these column names (renamed from original Norwegian during schema migration):
+
+| DB column             | Original source field |
+|-----------------------|-----------------------|
+| source_id             | (auto)                |
+| pasted_at             | (auto)                |
+| person_raw            | Person                |
+| role_raw              | Rolle                 |
+| title_raw             | Tittel                |
+| instrumentation_raw   | Besetning             |
+| publisher_raw         | Forlag                |
+| plate_number_raw      | Platenr               |
+| publication_year_raw  | Utgivelsesår          |
+| month_raw             | Måned                 |
+| periodical_raw        | Periodikum            |
+| comment_raw           | Kommentar             |
+| legacy_composition_id | (old stamp, unused)   |
 
 -----
 
 ## Database Schema
 
+### source_import
+Raw preservation layer — never destructively edited.
+All 10 content fields + source_id + pasted_at + legacy_composition_id.
+
+### role
+- role_id (PK), role_name (unique), role_group (work|publication|source|other), notes
+- Seeded: Komponist, Tekstforfatter, Arrangør, Bearbeider, Utgiver, Redaktør, Oversetter, Anonym, Ukjent
+
+### role_alias
+- role_alias_id (PK), role_id (FK), raw_role, notes
+
 ### person
+- person_id (PK), last_name, first_name (nullable), display_name,
+  sort_name (nullable), person_type ('person'|'anon'|'collection'),
+  birth_year (nullable), death_year (nullable), notes (nullable),
+  is_edited (bool), corrections (JSONB), corrected_at, corrected_by, created_at
 
-- person_id (PK, autoincrement)
-- last_name (text)
-- first_name (text, nullable — may be initials only e.g. “B C”)
-- person_type (text) — ‘person’ | ‘anon’ | ‘collection’
-  - `anon` = unknown composer (“Anon” in source)
-  - `collection` = multiple composers, editor unknown or secondary (“NN” in source)
-- born (integer, nullable) — aligned to live music database field name
-- bio_text (memo, nullable) — aligned to live music database field name
-- notes (text, nullable)
-
-### pseudonym
-
-Separate table (not a single text field) to support multiple aliases per person with attribution notes.
-
-- pseudonym_id (PK, autoincrement)
-- person_id (FK → person)
-- pseudonym_name (text) — e.g. “Lago, N”
-- pseudonym_source (text) — notes on attribution
-
-Known pseudonyms from source:
-
-|Pseudonym       |Real name                |
-|----------------|-------------------------|
-|Aletter, Wilhelm|Alphonse Tellier         |
-|Bachmann, G     |Fr. Behr                 |
-|Bolt, Finn      |Sigurd Lie               |
-|Bonheur, Theo   |Thomas Bulch             |
-|Brown, Elisa    |L. Solberg               |
-|Clarelius       |Alfred Paulsen           |
-|d’Avout, Fanny  |Fanny Egeberg            |
-|Grahl C G       |G C W Prahl              |
-|Ika             |Albertina Fredrika Peyron|
-|Lago, N         |Laura Netzel             |
-|Lambert, Leon   |Alfred Paulsen           |
-|Morley, Ch      |Fr Behr                  |
-|Nesrednah       |H Andersen               |
-|Petroe, Emil    |Emil Petersen            |
-|Pomposi, Ernesto|Christian Teilman        |
-|Wilhelmine      |Wilhelmine Sørlie        |
-
-### composition
-
-Core intellectual work record.
-
-- composition_id (PK, autoincrement)
-- publisher_id (FK → publisher, nullable)
-- instrumentation_id (FK → instrumentation, nullable)
-- title (text 500) — aligned to live database; standardized orthography; text before “/” in source
-- subtitle (text 500, nullable) — parsed from “/” separator in source title string
-- plate_number (text 100) — not sortable; space-separated numbers; dash notation for 3+ numbers
-- year_issued (text 20) — publication date / range start
-- year_issued_end (text 20, nullable) — only for year ranges e.g. “1860 - 1869”
-- year_qualifier (text) — ‘exact’ | ‘circa’ | ‘before’ | ‘decade’ | ‘range’
-  - `1852` → exact
-  - `1852c` → circa
-  - `1852f` → before (displays as –1852)
-  - `185*` → decade (1850–1859)
-  - `1860 - 1869` → range (use year_issued + year_issued_end)
-- month (text 20, nullable) — sorts alphabetically, not chronologically
-- raw_instrumentation (text 100, nullable) — fallback for combinations not matching any instrumentation code
-- composition_notes (text, nullable) — aligned to live database; includes former publisher info
-
-### composition_person
-
-Many-to-many join between composition and person with role.
-Field names aligned to live music database.
-
-- id (PK, autoincrement)
-- composition_id (FK → composition)
-- person_id (FK → person)
-- role (text) — ‘Composer’ | ‘Lyricist’ | ‘Arranger’ | ‘Editor’
-- credited_as (text, nullable) — name variant as printed on the score; aligned to live database
-- is_primary (boolean) — main credited person
-
-**Import note**: Lyricist/author names embedded in source title strings as `(Initial Surname)`
-e.g. `3 Digte op.2 /Serenade (J Moe)` → extract `J Moe` as a `composition_person` row
-with `role = 'Lyricist'`.
+### person_alias
+- person_alias_id (PK), person_id (FK), raw_name, alias_type, confidence, source_id (FK), notes
 
 ### publisher
+- publisher_id (PK), publisher_name (unique), city (default 'Christiania'),
+  country, publisher_type, active_from_year, active_to_year,
+  is_self_published (bool), is_unknown (bool), notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-- publisher_id (PK, autoincrement)
-- publisher_name (text) — aligned to live database field name
-- city (text) — default: Christiania (unless otherwise specified in source)
-- country (text, nullable)
-- is_self_published (boolean) — TRUE for “Eget” in source data
-- is_unknown (boolean) — TRUE for “ukjent” in source data
+### publisher_alias
+- publisher_alias_id (PK), publisher_id (FK), raw_name, confidence, source_id (FK), notes
 
 ### instrumentation
+- instrumentation_id (PK), legacy_code (unique), description_no, description_en,
+  category ('solo'|'choir'|'ensemble'|'school'), is_school_book (bool), notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-Full Norwegian text as primary value. Legacy codes kept for import mapping only.
-
-- instrumentation_id (PK, autoincrement)
-- description_no (text) — PRIMARY e.g. “fløyte og piano”
-- description_en (text, nullable) — e.g. “flute and piano”
-- legacy_code (text 50) — e.g. “fl-p”; import mapping only, can be deprecated post-migration
-- category (text) — ‘choir’ | ‘solo’ | ‘ensemble’ | ‘school’
-- is_school_book (boolean) — TRUE for method/tutor books
-
-**Seed data — full instrumentation table:**
-
-|legacy_code|description_no     |description_en      |category|
-|-----------|-------------------|--------------------|--------|
-|2s-p       |to stemmer og piano|two voices and piano|ensemble|
-|2st        |tostemmig kor      |two-part choir      |choir   |
-|3st        |trestemmig kor     |three-part choir    |choir   |
-|blkor      |blandet kor        |mixed choir         |choir   |
-|cor        |horn               |horn                |solo    |
-|dkor       |damekor            |ladies’ choir       |choir   |
-|fl-p       |fløyte og piano    |flute and piano     |ensemble|
-|git        |gitar              |guitar              |solo    |
-|harm       |harmonium          |harmonium           |solo    |
-|mkor       |mannskor           |men’s choir         |choir   |
-|org        |orgel              |organ               |solo    |
-|ork        |orkester           |orchestra           |ensemble|
-|p2         |tohendig piano     |piano two hands     |solo    |
-|p4         |firhendig piano    |piano four hands    |solo    |
-|s-p        |sang og piano      |voice and piano     |ensemble|
-|strkva     |strykekvartett     |string quartet      |ensemble|
-|vc-p       |cello og piano     |cello and piano     |ensemble|
-|vn-p       |fiolin og piano    |violin and piano    |ensemble|
-
-**Note on codes**: Codes are NOT mechanically decomposable by a single rule.
-`p4` = piano four hands (not p + 4). `2s-p` = two voices + piano. Treat each code as opaque.
-Bare instrument codes (`fl`, `vn`, `p`, `vc`) may appear in source data without a matching
-compound code — store in `composition.raw_instrumentation` as fallback.
+### instrumentation_alias
+- instrumentation_alias_id (PK), instrumentation_id (FK), raw_value, confidence, source_id (FK), notes
 
 ### periodical
+- periodical_id (PK), title (unique), abbreviation, ref_format, notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-Named journal series.
-
-- periodical_id (PK, autoincrement)
-- title (text) — full title
-- abbreviation (text 50) — e.g. “NMT”, “MLM”
-- ref_format (text) — parsing pattern description
-- notes (text, nullable) — e.g. continuation relationships between journals
-
-Known periodicals from source:
-
-|title                      |abbreviation|notes                                                     |
-|---------------------------|------------|----------------------------------------------------------|
-|Den norske Lyra            |DNL         |ref format: 4-digit YYMM e.g. 2510 = Oct 1825             |
-|Lyra                       |—           |ref format: h.XYZ = vol X issue YZ                        |
-|Musikalsk Album            |MA          |ref format: h.XYZ; NR = ny rekke; TrR = tredje rekke      |
-|Musikalsk Løverdags-Magazin|MLM         |ref format: h.XYZW complex; see periodical_issue          |
-|Musikalsk Nyhedsblad       |MN          |Direct continuation of MLM                                |
-|Nordisk Musik-Tidende      |NMT         |Plate numbers from publisher protocols, repeated per issue|
-|Nyt Musikalsk Museum       |NMM         |ref format: h.XYZ = vol X issue YZ                        |
-|Amphion                    |—           |                                                          |
+### periodical_alias
+- periodical_alias_id (PK), periodical_id (FK), raw_title, confidence, source_id (FK), notes
 
 ### periodical_issue
+- issue_id (PK), periodical_id (FK), raw_reference, issue_year, issue_month,
+  issue_number, series_label, notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-Individual issues within a periodical.
+### publication  ← main entity (replaces old 'composition' table)
+- publication_id (PK), primary_source_id (FK → source_import),
+  title, subtitle, plate_number, plate_conflict_note,
+  publisher_id (FK), year_issued, year_issued_end,
+  year_qualifier ('exact'|'circa'|'before'|'decade'|'range'),
+  month, publication_type, periodical_issue_id (FK), composition_notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at, updated_at
 
-- issue_id (PK, autoincrement)
-- periodical_id (FK → periodical)
-- raw_reference (text 50) — original string e.g. “h.101”, “NR h.02”, “2510”
-- series_label (text 50, nullable) — ‘NR’ (ny rekke) | ‘TrR’ (tredje rekke) | null
-- volume (smallint, nullable) — årgang
-- issue_number (smallint, nullable) — hefte
-- division (smallint, nullable) — avdeling (MLM only)
-- section (smallint, nullable) — rekke (MLM only)
+### publication_person
+- publication_person_id (PK), publication_id (FK), person_id (FK), role_id (FK),
+  credited_as, sequence_no, source_id (FK), is_primary (bool), notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-**Reference parsing rules:**
+### publication_instrumentation
+- publication_instrumentation_id (PK), publication_id (FK), instrumentation_id (FK),
+  raw_instrumentation, sequence_no, source_id (FK), notes,
+  is_edited, corrections (JSONB), corrected_at, corrected_by, created_at
 
-- `h.101` → volume=1, issue_number=1
-- `h.306` → volume=3, issue_number=6
-- `NR h.02` → series_label=‘NR’, issue_number=2
-- `h.0102` → volume=1, issue_number=2 (MLM style — leading zero)
-- `h.1201` → division=1, section=2, issue_number=1 (MLM style)
-- `2510` → Den norske Lyra: month=Oct, year=1825
-
-### composition_issue
-
-Many-to-many join between composition and periodical issue.
-
-- composition_id (FK → composition)
-- issue_id (FK → periodical_issue)
-- plate_number_in_issue (text 100, nullable) — NMT repeats plate number per issue
+### publication_issue
+- publication_issue_id (PK), publication_id (FK), issue_id (FK),
+  plate_number_in_issue, notes, created_at
 
 ### former_publisher
-
-Ordered publication history per composition. Extracted from composition_notes on import.
-
-- former_pub_id (PK, autoincrement)
-- composition_id (FK → composition)
-- publisher_id (FK → publisher)
-- sequence (smallint) — ordering (1 = earliest)
-- notes (text, nullable)
+- former_publisher_id (PK), publication_id (FK), publisher_id (FK),
+  raw_former_publisher, evidence_text, sequence_no, source_id (FK), notes, created_at
 
 -----
 
-## Relationships
+## Traceability / Edit Audit
 
-- Person 1─∞ Pseudonym
-- Person ∞─∞ Composition via composition_person (with role)
-- Publisher 1─∞ Composition
-- Instrumentation 1─∞ Composition
-- Periodical 1─∞ PeriodicalIssue
-- Composition ∞─∞ PeriodicalIssue via composition_issue
-- Composition 1─∞ FormerPublisher
-- Publisher 1─∞ FormerPublisher
+Every main table (publication, person, publisher, instrumentation, periodical, periodical_issue,
+publication_person, publication_instrumentation) has:
+- `is_edited` boolean — set TRUE when any field is manually corrected
+- `corrections` JSONB — field-level before/after record, e.g.:
+  `{"plate_number": {"original": "2232", "corrected": "2322", "corrected_at": "2026-06-12", "corrected_by": "EI"}}`
+- `corrected_at` timestamptz
+- `corrected_by` text
+
+The raw source is always preserved in `source_import` and linked via `publication.primary_source_id`.
 
 -----
 
-## Source Data Format
+## Person Name Rules
 
-### Search result columns (tab-separated export):
+- Format: `Last, First` → `last_name`, `first_name`
+- `Anon` → `person_type = 'anon'`, `last_name = 'Anon'`
+- `Anon (C A T)` / `Anon (En Dilettant)` etc. → whole string as `last_name`, `person_type = 'anon'`
+- `NN` → `person_type = 'collection'`
+- Single name only → `last_name` only, `person_type = 'person'`
+- Multiple persons in source: `A & B` → `A | B` in person_raw
+- Honorifics (e.g. `Abbed`) in first_name — preserve as-is, do not strip
 
-`Person | Rolle | Tittel | Besetning | Forlag | Platenr | Utgivelsesår | Måned | Periodikum | Kommentar`
+### Known pseudonyms
 
-### Column mapping to schema:
+| Pseudonym | Real name |
+|-----------|-----------|
+| Aletter, Wilhelm | Alphonse Tellier |
+| Bachmann, G | Fr. Behr |
+| Bolt, Finn | Sigurd Lie |
+| Bonheur, Theo | Thomas Bulch |
+| Brown, Elisa | L. Solberg |
+| Clarelius | Alfred Paulsen |
+| d'Avout, Fanny | Fanny Egeberg |
+| Grahl C G | G C W Prahl |
+| Ika | Albertina Fredrika Peyron |
+| Lago, N | Laura Netzel |
+| Lambert, Leon | Alfred Paulsen |
+| Morley, Ch | Fr Behr |
+| Nesrednah | H Andersen |
+| Petroe, Emil | Emil Petersen |
+| Pomposi, Ernesto | Christian Teilman |
+| Wilhelmine | Wilhelmine Sørlie |
 
-|Source column|Table                        |Field                                         |
-|-------------|-----------------------------|----------------------------------------------|
-|Person       |person                       |last_name + first_name (format: “Last, First”)|
-|Rolle        |composition_person           |role                                          |
-|Tittel       |composition                  |title (+ subtitle after “/”)                  |
-|Besetning    |instrumentation              |legacy_code → instrumentation_id              |
-|Forlag       |publisher                    |publisher_name                                |
-|Platenr      |composition                  |plate_number                                  |
-|Utgivelsesår |composition                  |year_issued (+ year_qualifier)                |
-|Måned        |composition                  |month                                         |
-|Periodikum   |periodical + periodical_issue|title + raw_reference                         |
-|Kommentar    |composition                  |composition_notes                             |
+-----
 
-### Import transformation rules:
+## Year Parsing Rules
 
-1. **Person name**: Split “Last, First” on first comma → last_name, first_name
-1. **Title with subtitle**: Split on “/” → title, subtitle
-1. **Lyricist in title**: Extract “(Initial Surname)” from title → composition_person row, role=‘Lyricist’
-1. **Year range**: “1860 - 1869” → year_issued=1860, year_issued_end=1869, year_qualifier=‘range’
-1. **Periodikum**: Split on last space before “h.” or digit pattern → periodical title + raw_reference
-1. **Besetning**: Look up legacy_code in instrumentation table → instrumentation_id; if no match → raw_instrumentation
-1. **Forlag “Eget”**: → publisher row with is_self_published=TRUE
-1. **Forlag “ukjent”**: → publisher row with is_unknown=TRUE
-1. **Forlag default city**: Christiania unless otherwise stated
+| Source format | year_issued | year_issued_end | year_qualifier |
+|---------------|-------------|-----------------|----------------|
+| `1852` | 1852 | — | exact |
+| `1852c` | 1852 | — | circa |
+| `1905 ca` | 1905 | — | circa |
+| `1852f` | 1852 | — | before |
+| `185*` | 1850 | — | decade |
+| `1860 - 1869` | 1860 | 1869 | range |
+
+-----
+
+## Title Parsing Rules
+
+- Split on first `/` → `title` + `subtitle`
+- Extract `(Initial Surname)` from title/subtitle → `publication_person` with role Tekstforfatter
+  - Heuristic: 1–4 words, no digits, looks like a name
+  - Well-known names (Ibsen, Bjørnson, Wergeland) may appear without initials
+- Do NOT extract initials from `Anon (C A T)` — that's a person name pattern
+- Dedications in titles are NOT lyricists
+
+-----
+
+## Instrumentation Codes
+
+### Known codes (subset — full list in database)
+
+| legacy_code | description_no | category |
+|-------------|----------------|----------|
+| p2 | tohendig piano | solo |
+| p4 | firhendig piano | solo |
+| s-p | sang og piano | ensemble |
+| vn-p | fiolin og piano | ensemble |
+| mkor | mannskor | choir |
+| blkor | blandet kor | choir |
+| ork | orkester | ensemble |
+| s-git | sang og gitar | ensemble |
+| korps | korps / messingensemble | ensemble |
+| hardingfele | hardingfele | solo |
+
+Full list: 91 codes in the `instrumentation` table.
+
+### Source code aliases
+
+| Source code | Maps to |
+|-------------|---------|
+| 2 vn | 2vn |
+| s-salmodikon | s-salm |
+| s-2 fl | s-2fl |
+| fl vn | fl-vn |
+| harm p2 | harm-p2 |
+| 6 horn | 6-horn |
+| skole s | skole-s |
+| skole kor | skole-kor |
+| skole vn | skole-vn |
+
+Full alias list in `instrumentation_alias` table.
+
+### Publication type codes (NOT instrumentation)
+
+| Source code | publication_type value |
+|-------------|------------------------|
+| sangbok | sangbok |
+| skolesangbok | skolesangbok |
+| koralbok | koralbok |
+| litur | liturgisk |
+| skole | skole |
+| klaveruttog | klaveruttog |
+
+-----
+
+## Known Periodicals
+
+| Title | Abbreviation | Ref format |
+|-------|-------------|------------|
+| Den norske Lyra | DNL | 4-digit YYMM |
+| Lyra | — | h.XYZ |
+| Musikalsk Album | MA | h.XYZ; NR/TrR variants |
+| Musikalsk Løverdags-Magazin | MLM | h.XXYY |
+| Musikalsk Nyhedsblad | MN | h.XYZ |
+| Nordisk Musik-Tidende | NMT | Title YYYY h.NN |
+| Nyt Musikalsk Museum | NMM | h.XYZ |
+| Amphion | — | Amphion årg.X nr.YY |
+| Musik-Magazin for Violin | — | h.X |
+| Bragi | — | h.XNN (series+issue) |
+| Apollo | — | h.NN |
+| Terpsichore | — | h.NN |
+| Vinter-Salonen | — | Vinter-Salonen YYYY h.N |
+| Danse-Salonen | — | h.NN |
+| + 5 more in periodical table | | |
+
+-----
+
+## Known Publishers
+
+119 publishers in the `publisher` table. City defaults to Christiania.
+
+Key publishers: Cappelen, Warmuth, Hals, Huseby & Co, Roverud, Winther, Prahl, Fehr,
+Winther E, Guldberg & Dz, Zapffe, Cammermeyer, Aschehoug, Kaland, By.
+
+Special values:
+- `Eget` → `is_self_published = TRUE`
+- `ukjent` → `is_unknown = TRUE`
+- `Winther E` — separate from `Winther` until confirmed
+
+-----
+
+## SQL Patterns
+
+### Add new instrumentation code
+```sql
+INSERT INTO public.instrumentation (legacy_code, description_no, description_en, category, is_school_book)
+VALUES ('code', 'norsk beskrivelse', 'english description', 'ensemble', FALSE);
+```
+
+### Add new publisher
+```sql
+INSERT INTO public.publisher (publisher_name, city, publisher_type, is_self_published, is_unknown, notes)
+VALUES ('Name', 'Christiania', 'publisher', FALSE, FALSE, 'notes');
+```
+
+### Add new periodical
+```sql
+INSERT INTO public.periodical (title, abbreviation, ref_format, notes)
+VALUES ('Title', 'ABB', 'ref format', NULL);
+```
+
+### Record a correction (traceability)
+```sql
+UPDATE public.publication
+SET plate_number  = '2322',
+    is_edited     = TRUE,
+    corrected_at  = now(),
+    corrected_by  = 'EI',
+    corrections   = jsonb_set(
+        coalesce(corrections, '{}'::jsonb),
+        '{plate_number}',
+        '{"original": "2232", "corrected": "2322"}'::jsonb
+    )
+WHERE publication_id = 123;
+```
+
+### Check for duplicate publications
+```sql
+SELECT title, publisher_id, plate_number, year_issued, COUNT(*) as cnt
+FROM public.publication
+GROUP BY title, publisher_id, plate_number, year_issued
+HAVING COUNT(*) > 1;
+```
+
+### Check all publications for a person
+```sql
+SELECT p.publication_id, p.title, p.year_issued, p.plate_number,
+       pub.publisher_name, r.role_name
+FROM public.publication p
+JOIN public.publication_person pp ON pp.publication_id = p.publication_id
+JOIN public.person pe ON pe.person_id = pp.person_id
+JOIN public.role r ON r.role_id = pp.role_id
+LEFT JOIN public.publisher pub ON pub.publisher_id = p.publisher_id
+WHERE pe.last_name = 'LastName'
+ORDER BY p.year_issued, p.title;
+```
+
+### Grants for new tables
+```sql
+GRANT SELECT ON public.table_name TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service_role;
+```
+
+-----
+
+## Frontend Credentials
+
+```js
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+```
+
+Use these in every new HTML page. Never use the secret key in frontend code.
 
 -----
 
@@ -262,43 +374,33 @@ Ordered publication history per composition. Extracted from composition_notes on
 
 Fields intentionally aligned to `public` schema in live Supabase project (tfqnzszyjsdgdeksizel):
 
-|This database    |Live database    |Table             |
-|-----------------|-----------------|------------------|
-|born             |born             |person            |
-|bio_text         |bio_text         |person            |
-|title            |title            |composition       |
-|composition_notes|composition_notes|composition       |
-|publisher_name   |publisher_name   |publisher         |
-|composition_id   |composition_id   |composition_person|
-|person_id        |person_id        |composition_person|
-|role             |role             |composition_person|
-|credited_as      |credited_as      |composition_person|
+| This database | Live database | Table |
+|---------------|---------------|-------|
+| last_name | last_name | person |
+| first_name | first_name | person |
+| title | title | publication |
+| composition_notes | composition_notes | publication |
+| publisher_name | publisher_name | publisher |
+| publication_id | composition_id | publication_person |
+| person_id | person_id | publication_person |
+| role_id → role_name | role | publication_person |
+| credited_as | credited_as | publication_person |
 
 -----
 
-## SQL Setup
+## Important Notes
 
-```sql
--- Required grants for new tables
-GRANT SELECT ON public.table_name TO anon, authenticated;
-```
-
-## Python API Pattern
-
-```python
-import requests
-
-SUPABASE_URL = "https://<your-project>.supabase.co"
-API_KEY = "<your-publishable-key>"
-HEADERS = {
-    "apikey": API_KEY,
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
-
-# SELECT
-r = requests.get(f"{SUPABASE_URL}/rest/v1/composition?select=*", headers=HEADERS)
-
-# INSERT
-r = requests.post(f"{SUPABASE_URL}/rest/v1/composition", headers=HEADERS, json={...})
-```
+- **Reads**: Claude Code can query Supabase directly via the REST API (PostgREST) using the
+  frontend publishable key over HTTPS, e.g.:
+  `curl "https://lmsqnyssnxsiibnyguxy.supabase.co/rest/v1/person?last_name=eq.Cappelen&select=*" -H "apikey: <publishable_key>" -H "Authorization: Bearer <publishable_key>"`
+  Use `-H "Prefer: count=exact"` with `select=<col>` to get exact row counts from the
+  `Content-Range` response header without pulling all rows.
+- **Writes**: Do NOT write via the REST API with the publishable key. For INSERT/UPDATE/DELETE,
+  still provide SQL for manual execution (the secret key is intentionally not used from here)
+- **Always syntax-check code files before delivering**
+- **Empty fields must insert as NULL, never empty string** — stager enforces this
+- **source_import is sacred** — never TRUNCATE or DROP CASCADE from tables that reference it
+  without verifying no FK points back. The 2026-06-12 incident: TRUNCATE ... CASCADE on
+  composition wiped source_import via FK. Recovered from xlsx export.
+- **Unique constraint on source_import** uses IS NOT DISTINCT FROM semantics —
+  NULL vs empty string defeats it. Always normalise to NULL.
