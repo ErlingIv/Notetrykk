@@ -130,6 +130,7 @@ function recordLink(table, row){
   if (table==='publication') return `<a href="publication.html?id=${row.id}">${esc(row.label)}</a>`;
   if (table==='person') return `<a href="composer.html?id=${row.id}">${esc(row.label)}</a>`;
   if (table==='publisher') return `<a href="publisher.html?id=${row.id}">${esc(row.label)}</a>`;
+  if (table==='publication_person') return `<a href="publication.html?id=${row.id}">${esc(row.label)}</a>`;
   return esc(row.label);
 }
 
@@ -248,7 +249,7 @@ async function load(){
       fetchEdited('publication_person',
         'publication_person_id,publication_id,corrected_at,corrected_by,corrections',
         r => `Verk #${r.publication_id}`,
-        'publication_person_id'),
+        'publication_id'),
     ]);
 
     allEntries = [...publications, ...persons, ...publishers, ...pubPersons]
