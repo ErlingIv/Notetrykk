@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endringer — Norske Notetrykk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f7f4ee;--paper:#fffef9;--ink:#1a1814;--muted:#7a7060;--faint:#e8e2d4;--accent:#8b3a1e;--accent2:#2a5c45;--border:#d4cdc0;--serif:'Playfair Display',Georgia,serif;--body:'Source Serif 4',Georgia,serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+
+  .site-header{background:var(--paper);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
+  .back-link{font-size:0.82rem;color:var(--muted);text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;display:flex;align-items:center;gap:0.3rem;transition:color 0.15s}
+  .back-link:hover{color:var(--accent)}
+  .site-name{font-family:var(--serif);font-size:1rem;font-weight:500;color:var(--ink);text-decoration:none}
+  .site-name:hover{color:var(--accent)}
+
+  main{max-width:860px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+  .page-heading{font-family:var(--serif);font-size:clamp(1.4rem,3vw,1.9rem);font-weight:700;color:var(--ink);margin-bottom:0.3rem}
+  .page-sub{font-size:0.88rem;color:var(--muted);margin-bottom:1.75rem}
+
+  /* Filter bar */
+  .filter-bar{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+  .filter-btn{font-family:var(--body);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--paper);color:var(--muted);cursor:pointer;transition:all 0.15s}
+  .filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* Date group header */
+  .date-group{margin-bottom:2rem}
+  .date-label{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--faint)}
+
+  /* Change card */
+  .change-card{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:0.6rem;display:grid;grid-template-columns:auto 1fr auto;gap:0.5rem 1rem;align-items:start}
+  .change-card:hover{border-color:var(--muted)}
+
+  .table-pill{font-size:0.68rem;letter-spacing:0.07em;text-transform:uppercase;padding:3px 9px;border-radius:3px;border:1px solid;white-space:nowrap;align-self:center}
+  .pill-publication{background:#f0ece4;color:#6a5030;border-color:#d4c8a0}
+  .pill-person{background:#eaf0ea;color:#2a5c2a;border-color:#b8d4b8}
+  .pill-publisher{background:#e8eef4;color:#2a4a6a;border-color:#b0c8e0}
+  .pill-publication_person{background:#f5eaf4;color:#5a2a5a;border-color:#d0b0d0}
+  .pill-other{background:#f0f0f0;color:#666;border-color:#ccc}
+
+  .card-body{}
+  .card-title{font-family:var(--serif);font-size:0.97rem;font-weight:500;color:var(--ink);line-height:1.3}
+  .card-title a{color:inherit;text-decoration:none}
+  .card-title a:hover{color:var(--accent)}
+  .card-meta{font-size:0.78rem;color:var(--muted);margin-top:2px}
+
+  .field-changes{margin-top:0.65rem;display:flex;flex-direction:column;gap:0.35rem}
+  .field-row{display:flex;gap:0.5rem;align-items:baseline;font-size:0.82rem;flex-wrap:wrap}
+  .field-name{font-size:0.7rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);min-width:7rem;flex-shrink:0}
+  .field-old{color:#a32d2d;text-decoration:line-through;word-break:break-word}
+  .field-arrow{color:var(--muted);flex-shrink:0}
+  .field-new{color:var(--accent2);word-break:break-word}
+  .field-added{color:var(--accent2);font-style:italic}
+
+  .card-time{font-size:0.72rem;color:var(--muted);white-space:nowrap;text-align:right}
+  .card-by{font-size:0.72rem;color:var(--muted);text-align:right}
+
+  .loading-state{text-align:center;padding:3rem;color:var(--muted);font-size:0.9rem}
+  .error-state{color:#a32d2d;font-size:0.9rem;padding:1.5rem 0}
+  .empty-state{text-align:center;padding:3rem;color:var(--muted);font-size:0.9rem;font-style:italic}
+
+  .summary-bar{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.75rem;padding:0.9rem 1.1rem;background:var(--paper);border:1px solid var(--border);border-radius:8px}
+  .summary-item{display:flex;flex-direction:column;gap:2px}
+  .summary-num{font-family:var(--serif);font-size:1.4rem;font-weight:700;color:var(--ink);line-height:1}
+  .summary-label{font-size:0.72rem;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted)}
+
+  @media(max-width:600px){
+    .change-card{grid-template-columns:1fr;gap:0.4rem}
+    .card-time,.card-by{text-align:left}
+    .field-name{min-width:5rem}
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="back-link" href="index.html">← Hjem</a>
+  <a class="site-name" href="index.html">Norske Notetrykk 1811–1908</a>
+</header>
+<main>
+  <h1 class="page-heading">Endringer</h1>
+  <p class="page-sub">Alle manuelle korreksjoner og tillegg, nyeste først.</p>
+  <div id="content"><div class="loading-state">Laster…</div></div>
+</main>
+<script>
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtDatetime(iso){
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('no-NO',{day:'2-digit',month:'short',year:'numeric'})
+    + ' ' + d.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDateGroup(iso){
+  if (!iso) return 'Ukjent dato';
+  const d = new Date(iso);
+  return d.toLocaleDateString('no-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function dateKey(iso){
+  if (!iso) return '0000-00-00';
+  return iso.slice(0,10);
+}
+
+const TABLE_LABELS = {
+  publication:        'Publikasjon',
+  person:             'Person',
+  publisher:          'Forlag',
+  publication_person: 'Person–verk',
+  instrumentation:    'Besetning',
+  periodical:         'Periodikum',
+};
+
+function pillClass(table){
+  return {
+    publication:'pill-publication',
+    person:'pill-person',
+    publisher:'pill-publisher',
+    publication_person:'pill-publication_person',
+  }[table] || 'pill-other';
+}
+
+function recordLink(table, row){
+  if (table==='publication') return `<a href="publication.html?id=${row.id}">${esc(row.label)}</a>`;
+  if (table==='person') return `<a href="composer.html?id=${row.id}">${esc(row.label)}</a>`;
+  if (table==='publisher') return `<a href="publisher.html?id=${row.id}">${esc(row.label)}</a>`;
+  return esc(row.label);
+}
+
+function renderFieldChanges(corrections){
+  if (!corrections || typeof corrections !== 'object') return '';
+  const rows = [];
+  for (const [field, val] of Object.entries(corrections)){
+    if (field === '_added'){
+      const reason = val.reason || '';
+      rows.push(`<div class="field-row">
+        <span class="field-name">Tillegg</span>
+        <span class="field-added">${esc(reason)}</span>
+      </div>`);
+      continue;
+    }
+    const orig = val?.original ?? null;
+    const corr = val?.corrected ?? null;
+    const fieldLabel = field.replace(/_/g,' ');
+    if (orig !== null && corr !== null){
+      rows.push(`<div class="field-row">
+        <span class="field-name">${esc(fieldLabel)}</span>
+        <span class="field-old">${esc(String(orig))}</span>
+        <span class="field-arrow">→</span>
+        <span class="field-new">${esc(String(corr))}</span>
+      </div>`);
+    } else if (corr !== null){
+      rows.push(`<div class="field-row">
+        <span class="field-name">${esc(fieldLabel)}</span>
+        <span class="field-added">${esc(String(corr))}</span>
+      </div>`);
+    }
+  }
+  if (!rows.length) return '';
+  return `<div class="field-changes">${rows.join('')}</div>`;
+}
+
+// ── Fetch edited rows from one table ──
+async function fetchEdited(table, selectFields, labelFn, idField){
+  try {
+    const rows = await fetch(
+      `${SUPABASE_URL}/rest/v1/${table}?is_edited=eq.true&select=${selectFields}&order=corrected_at.desc&limit=500`,
+      { headers: H }
+    ).then(r=>r.json());
+    if (!Array.isArray(rows)) return [];
+    return rows.map(row => ({
+      table,
+      id: row[idField],
+      label: labelFn(row),
+      corrected_at: row.corrected_at,
+      corrected_by: row.corrected_by,
+      corrections: row.corrections,
+    }));
+  } catch(e){
+    console.warn(`Failed to fetch ${table}:`, e);
+    return [];
+  }
+}
+
+let allEntries = [];
+let activeFilter = 'all';
+
+function renderFeed(entries){
+  const el = document.getElementById('feed');
+  if (!el) return;
+
+  const filtered = activeFilter === 'all' ? entries : entries.filter(e=>e.table===activeFilter);
+  if (!filtered.length){
+    el.innerHTML = '<div class="empty-state">Ingen endringer funnet.</div>';
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  for (const entry of filtered){
+    const key = dateKey(entry.corrected_at);
+    if (!groups[key]) groups[key] = { label: fmtDateGroup(entry.corrected_at), entries:[] };
+    groups[key].entries.push(entry);
+  }
+
+  el.innerHTML = Object.entries(groups)
+    .sort(([a],[b]) => b.localeCompare(a))
+    .map(([, group]) => `
+      <div class="date-group">
+        <div class="date-label">${esc(group.label)}</div>
+        ${group.entries.map(entry => `
+          <div class="change-card">
+            <span class="table-pill ${pillClass(entry.table)}">${esc(TABLE_LABELS[entry.table]||entry.table)}</span>
+            <div class="card-body">
+              <div class="card-title">${recordLink(entry.table, entry)}</div>
+              ${renderFieldChanges(entry.corrections)}
+            </div>
+            <div>
+              <div class="card-time">${fmtDatetime(entry.corrected_at)}</div>
+              ${entry.corrected_by?`<div class="card-by">${esc(entry.corrected_by)}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+}
+
+async function load(){
+  const el = document.getElementById('content');
+  try {
+    const [publications, persons, publishers, pubPersons] = await Promise.all([
+      fetchEdited('publication',
+        'publication_id,title,corrected_at,corrected_by,corrections',
+        r => r.title || `#${r.publication_id}`,
+        'publication_id'),
+      fetchEdited('person',
+        'person_id,last_name,first_name,corrected_at,corrected_by,corrections',
+        r => [r.last_name, r.first_name].filter(Boolean).join(', ') || `#${r.person_id}`,
+        'person_id'),
+      fetchEdited('publisher',
+        'publisher_id,publisher_name,corrected_at,corrected_by,corrections',
+        r => r.publisher_name || `#${r.publisher_id}`,
+        'publisher_id'),
+      fetchEdited('publication_person',
+        'publication_person_id,publication_id,corrected_at,corrected_by,corrections',
+        r => `Verk #${r.publication_id}`,
+        'publication_person_id'),
+    ]);
+
+    allEntries = [...publications, ...persons, ...publishers, ...pubPersons]
+      .sort((a,b) => (b.corrected_at||'').localeCompare(a.corrected_at||''));
+
+    const total = allEntries.length;
+    const counts = {};
+    for (const e of allEntries) counts[e.table] = (counts[e.table]||0)+1;
+
+    // Summary bar + filter bar + feed container
+    el.innerHTML = `
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="summary-num">${total}</span>
+          <span class="summary-label">Totalt</span>
+        </div>
+        ${Object.entries(counts).map(([t,n])=>`
+          <div class="summary-item">
+            <span class="summary-num">${n}</span>
+            <span class="summary-label">${esc(TABLE_LABELS[t]||t)}</span>
+          </div>`).join('')}
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">Alle</button>
+        ${Object.keys(counts).map(t=>`
+          <button class="filter-btn" data-filter="${t}">${esc(TABLE_LABELS[t]||t)}</button>`).join('')}
+      </div>
+      <div id="feed"></div>
+    `;
+
+    renderFeed(allEntries);
+
+    document.querySelectorAll('.filter-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeFilter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderFeed(allEntries);
+      });
+    });
+
+  } catch(e){
+    el.innerHTML = `<p class="error-state">Feil: ${esc(e.message)}</p>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

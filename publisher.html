@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forlag — Norske Notetrykk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f7f4ee;--paper:#fffef9;--ink:#1a1814;--muted:#7a7060;--faint:#e8e2d4;--accent:#8b3a1e;--accent2:#2a5c45;--border:#d4cdc0;--serif:'Playfair Display',Georgia,serif;--body:'Source Serif 4',Georgia,serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+  .site-header{background:var(--paper);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
+  .back-link{font-size:0.82rem;color:var(--muted);text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;display:flex;align-items:center;gap:0.3rem;transition:color 0.15s}
+  .back-link:hover{color:var(--accent)}
+  .site-name{font-family:var(--serif);font-size:1rem;font-weight:500;color:var(--ink);text-decoration:none}
+  .site-name:hover{color:var(--accent)}
+  main{max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  .pub-hero{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:2rem;margin-bottom:2rem}
+  .pub-name{font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;line-height:1.1;color:var(--ink)}
+  .pub-city{font-size:1rem;color:var(--muted);margin-top:0.3rem;font-weight:300}
+  .badges{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem}
+  .badge{font-size:0.75rem;padding:3px 10px;border-radius:4px;border:1px solid;letter-spacing:0.03em}
+  .badge-self{background:#f5ede0;color:#7a5c2a;border-color:#d4b880}
+  .badge-unknown{background:#f0f0f0;color:#888;border-color:#ccc}
+  .scores-heading{font-family:var(--serif);font-size:1.2rem;font-weight:500;color:var(--ink);margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:0.75rem;flex-wrap:wrap}
+  .scores-heading-count{font-family:var(--body);font-size:0.82rem;color:var(--muted);font-weight:400}
+  .score-table{width:100%;border-collapse:collapse;font-size:0.88rem}
+  .score-table th{font-family:var(--body);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:500;text-align:left;padding:0.4rem 0.75rem 0.6rem;border-bottom:2px solid var(--border);white-space:nowrap}
+  .score-table tr.score-row{border-bottom:1px solid var(--faint);transition:background 0.1s;cursor:pointer}
+  .score-table tr.score-row:last-child{border-bottom:none}
+  .score-table tr.score-row:hover{background:var(--paper)}
+  .score-table td{padding:0.65rem 0.75rem;vertical-align:top;color:var(--ink)}
+  .score-table td.id-cell{font-size:0.75rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;width:3.5rem}
+  .score-title-cell .title{font-family:var(--serif);font-weight:500;color:var(--ink);line-height:1.3}
+  .score-title-cell .subtitle{font-size:0.8rem;color:var(--muted);font-style:italic;margin-top:1px}
+  .score-title-cell .composer{font-size:0.78rem;color:var(--accent);margin-top:3px}
+  .score-title-cell .lyricist{font-size:0.78rem;color:var(--accent2);margin-top:2px}
+  .year-cell{white-space:nowrap;color:var(--muted);font-size:0.82rem;width:5rem}
+  .plate-cell{font-size:0.78rem;color:var(--muted)}
+  .instr-badge{display:inline-block;font-size:0.68rem;padding:1px 6px;border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--bg)}
+  .instr-badge.raw{border-color:#c8a84b;color:#7a5c2a;background:#fdf6e3}
+  .score-table th.sortable{cursor:pointer;user-select:none}
+  .score-table th.sortable:hover{color:var(--ink)}
+  .score-table th.sort-asc::after{content:' ↑';font-size:0.65rem}
+  .score-table th.sort-desc::after{content:' ↓';font-size:0.65rem}
+  .loading-state{text-align:center;padding:3rem;color:var(--muted);font-size:0.9rem}
+  .error-state{color:#a32d2d;font-size:0.9rem;padding:1.5rem 0}
+  @media(max-width:600px){.score-table th.hide-sm,.score-table td.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="back-link" href="index.html#publishers">← Forlag</a>
+  <a class="site-name" href="index.html">Norske Notetrykk 1811–1908</a>
+</header>
+<main>
+  <div id="content"><div class="loading-state">Laster…</div></div>
+</main>
+<script>
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+const params = new URLSearchParams(window.location.search);
+const pubId  = params.get('id');
+
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderTable() {
+  const { publications, instrMap, composerMap, lyricistMap } = window._tableData || {};
+  if (!publications) return;
+  const sortKey = window._sortKey || 'year';
+  const sortDir = window._sortDir || 'asc';
+  const sorted = [...publications].sort((a,b) => {
+    const va = sortKey==='title' ? (a.title||'') : String(a.year_issued||'');
+    const vb = sortKey==='title' ? (b.title||'') : String(b.year_issued||'');
+    return sortDir==='asc' ? va.localeCompare(vb,'no') : vb.localeCompare(va,'no');
+  });
+  document.querySelectorAll('.score-table th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.dataset.sort===sortKey) th.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
+  });
+  const tbody = document.querySelector('.score-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = sorted.map(c => {
+    const instr = instrMap[c.publication_id];
+    const instrParts = [];
+    if (instr?.legacy_code) instrParts.push(`${instr.description_no} (${instr.legacy_code})`);
+    else if (instr?.description_no) instrParts.push(`⚠ rå: ${instr.description_no}`);
+    const composers = composerMap[c.publication_id] || [];
+    const lyricists = lyricistMap[c.publication_id] || [];
+    return `
+      <tr class="score-row" onclick="window.location='publication.html?id=${c.publication_id}'">
+        <td class="id-cell">#${c.publication_id}</td>
+        <td class="score-title-cell">
+          <div class="title">${esc(c.title||'—')}</div>
+          ${c.subtitle?`<div class="subtitle">${esc(c.subtitle)}</div>`:''}
+          ${composers.map(cm=>`<div class="composer"><a href="composer.html?id=${cm.id}" onclick="event.stopPropagation()">${esc(cm.name)}</a></div>`).join('')}
+          ${lyricists.length?`<div class="lyricist">✍ ${lyricists.map(esc).join(', ')}</div>`:''}
+        </td>
+        <td class="year-cell hide-sm">${formatYear(c)||'—'}</td>
+        <td class="plate-cell hide-sm">${c.plate_number?esc(c.plate_number):'—'}</td>
+        <td class="hide-sm">${instrParts.map(p=>`<span class="instr-badge${p.startsWith('⚠')?' raw':''}">${esc(p)}</span>`).join(' ')}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function load() {
+  const el = document.getElementById('content');
+  if (!pubId) { el.innerHTML = '<p class="error-state">Ingen forlag-ID angitt.</p>'; return; }
+  try {
+    // 1. Publisher
+    const pub = (await fetch(`${SUPABASE_URL}/rest/v1/publisher?publisher_id=eq.${pubId}&select=*`, { headers: H }).then(r=>r.json()))[0];
+    if (!pub) throw new Error('Forlag ikke funnet');
+    document.title = `${pub.publisher_name} — Norske Notetrykk`;
+
+    // 2. Publications for this publisher
+    const publications = await fetch(
+      `${SUPABASE_URL}/rest/v1/publication?publisher_id=eq.${pubId}&select=publication_id,title,subtitle,year_issued,year_issued_end,year_qualifier,plate_number&order=year_issued.asc,title.asc`,
+      { headers: H }
+    ).then(r=>r.json());
+
+    const pubIds = publications.map(p=>p.publication_id);
+
+    // 3. Instrumentation via publication_instrumentation
+    const instrMap = {};
+    if (pubIds.length) {
+      const piRows = await fetch(
+        `${SUPABASE_URL}/rest/v1/publication_instrumentation?publication_id=in.(${pubIds.join(',')})&select=publication_id,instrumentation_id,raw_instrumentation`,
+        { headers: H }
+      ).then(r=>r.json());
+      const instrIds = [...new Set(piRows.map(r=>r.instrumentation_id).filter(Boolean))];
+      const instrDetails = {};
+      if (instrIds.length) {
+        (await fetch(`${SUPABASE_URL}/rest/v1/instrumentation?instrumentation_id=in.(${instrIds.join(',')})&select=instrumentation_id,legacy_code,description_no`, { headers: H }).then(r=>r.json()))
+          .forEach(i => instrDetails[i.instrumentation_id] = i);
+      }
+      piRows.forEach(pi => {
+        instrMap[pi.publication_id] = instrDetails[pi.instrumentation_id]
+          || (pi.raw_instrumentation ? { description_no: pi.raw_instrumentation, legacy_code: null } : null);
+      });
+    }
+
+    // 4. Composers and lyricists via publication_person + role table
+    const composerMap = {}, lyricistMap = {};
+    if (pubIds.length) {
+      const roleRows = await fetch(`${SUPABASE_URL}/rest/v1/role?role_name=in.(Komponist,Tekstforfatter)&select=role_id,role_name`, { headers: H }).then(r=>r.json());
+      const komponistId      = roleRows.find(r=>r.role_name==='Komponist')?.role_id;
+      const tekstforfatterId = roleRows.find(r=>r.role_name==='Tekstforfatter')?.role_id;
+      const roleFilter = [komponistId, tekstforfatterId].filter(Boolean).join(',');
+
+      const ppRows = await fetch(
+        `${SUPABASE_URL}/rest/v1/publication_person?publication_id=in.(${pubIds.join(',')})&role_id=in.(${roleFilter})&select=publication_id,person_id,role_id,credited_as`,
+        { headers: H }
+      ).then(r=>r.json());
+
+      const personIds = [...new Set(ppRows.map(r=>r.person_id).filter(Boolean))];
+      const personMap = {};
+      if (personIds.length) {
+        (await fetch(`${SUPABASE_URL}/rest/v1/person?person_id=in.(${personIds.join(',')})&select=person_id,first_name,last_name`, { headers: H }).then(r=>r.json()))
+          .forEach(p => personMap[p.person_id] = p);
+      }
+      ppRows.forEach(row => {
+        const p = personMap[row.person_id];
+        const name = row.credited_as || (p ? [p.last_name, p.first_name].filter(Boolean).join(', ') : '—');
+        if (row.role_id === komponistId) {
+          if (!composerMap[row.publication_id]) composerMap[row.publication_id] = [];
+          composerMap[row.publication_id].push({ name, id: row.person_id });
+        } else {
+          if (!lyricistMap[row.publication_id]) lyricistMap[row.publication_id] = [];
+          lyricistMap[row.publication_id].push(name);
+        }
+      });
+    }
+
+    // ── Render ──
+    const city = [pub.city, pub.country].filter(Boolean).join(', ');
+    window._tableData = { publications, instrMap, composerMap, lyricistMap };
+    window._sortKey = 'year'; window._sortDir = 'asc';
+
+    el.innerHTML = `
+      <div class="pub-hero">
+        <h1 class="pub-name">${esc(pub.publisher_name||'—')}</h1>
+        ${city?`<p class="pub-city">${esc(city)}</p>`:''}
+        <div class="badges">
+          ${pub.is_self_published?'<span class="badge badge-self">Eget forlag</span>':''}
+          ${pub.is_unknown?'<span class="badge badge-unknown">Ukjent</span>':''}
+        </div>
+      </div>
+      <div class="scores-heading">
+        Verk
+        <span class="scores-heading-count">${publications.length} publikasjon${publications.length!==1?'er':''}</span>
+      </div>
+      ${publications.length===0
+        ? '<div class="loading-state">Ingen publikasjoner funnet.</div>'
+        : `<table class="score-table">
+            <thead><tr>
+              <th>ID</th>
+              <th class="sortable" data-sort="title">Tittel</th>
+              <th class="sortable hide-sm" data-sort="year">År</th>
+              <th class="hide-sm">Platenr</th>
+              <th class="hide-sm">Besetning</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>`}
+    `;
+
+    if (publications.length > 0) {
+      renderTable();
+      document.querySelectorAll('.score-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          window._sortKey = th.dataset.sort;
+          window._sortDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+          renderTable();
+        });
+      });
+    }
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<p class="error-state">Feil: ${esc(e.message)}</p>`;
+  }
+}
+
+function formatYear(c) {
+  if (!c.year_issued) return '';
+  if (c.year_qualifier==='range'&&c.year_issued_end) return `${c.year_issued}–${c.year_issued_end}`;
+  if (c.year_qualifier==='circa')  return `ca. ${c.year_issued}`;
+  if (c.year_qualifier==='before') return `f. ${c.year_issued}`;
+  if (c.year_qualifier==='decade') return `${c.year_issued}0-åra`;
+  return String(c.year_issued);
+}
+
+load();
+</script>
+</body>
+</html>

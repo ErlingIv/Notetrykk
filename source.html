@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kildedata — Norske Notetrykk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f7f4ee;
+    --paper:   #fffef9;
+    --ink:     #1a1814;
+    --muted:   #7a7060;
+    --faint:   #e8e2d4;
+    --accent:  #8b3a1e;
+    --accent2: #2a5c45;
+    --border:  #d4cdc0;
+    --serif:   'Playfair Display', Georgia, serif;
+    --body:    'Source Serif 4', Georgia, serif;
+    --raw-bg:  #f0ece3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--body); background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--paper); border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem;
+  }
+  .back-link {
+    font-size: 0.82rem; color: var(--muted); text-decoration: none;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 0.3rem; transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--accent); }
+  .site-name {
+    font-family: var(--serif); font-size: 1rem; font-weight: 500;
+    color: var(--ink); text-decoration: none;
+  }
+  .site-name:hover { color: var(--accent); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+  .raw-badge {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 3px;
+    background: #fdf3e0; color: #7a5c2a; border: 1px solid #d4b880;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    background: var(--paper); border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 0.75rem; flex: 1; flex-wrap: wrap; }
+  .toolbar-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+
+  .search-input {
+    padding: 0.45rem 0.85rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); font-family: var(--body); font-size: 0.88rem; color: var(--ink);
+    outline: none; transition: border-color 0.15s; width: 260px;
+  }
+  .search-input:focus { border-color: var(--accent); background: var(--paper); }
+
+  select.filter-select {
+    padding: 0.45rem 0.75rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); font-family: var(--body); font-size: 0.82rem; color: var(--ink);
+    outline: none; cursor: pointer; transition: border-color 0.15s;
+  }
+  select.filter-select:focus { border-color: var(--accent); }
+
+  .count-label { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+  .btn-reset {
+    font-size: 0.78rem; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 5px; padding: 0.35rem 0.7rem; cursor: pointer; font-family: var(--body);
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Main ── */
+  main { max-width: 1300px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--paper); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  thead { position: sticky; top: 0; z-index: 2; }
+  th {
+    font-family: var(--body); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 500;
+    text-align: left; padding: 0.5rem 0.75rem 0.6rem;
+    background: var(--paper); border-bottom: 2px solid var(--border);
+    white-space: nowrap; user-select: none;
+  }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--ink); }
+  th.sort-asc::after  { content: ' ↑'; font-size: 0.6rem; }
+  th.sort-desc::after { content: ' ↓'; font-size: 0.6rem; }
+
+  tr.data-row { border-bottom: 1px solid var(--faint); transition: background 0.08s; }
+  tr.data-row:last-child { border-bottom: none; }
+  tr.data-row:hover { background: #f5f1e8; }
+  td { padding: 0.55rem 0.75rem; vertical-align: top; }
+
+  td.id-cell {
+    font-size: 0.72rem; color: var(--muted); white-space: nowrap;
+    font-variant-numeric: tabular-nums; width: 2.5rem;
+  }
+  td.person-cell { min-width: 140px; max-width: 200px; }
+  .person-name { font-family: var(--serif); font-size: 0.88rem; font-weight: 500; color: var(--ink); line-height: 1.3; }
+  .rolle-val { font-size: 0.74rem; color: var(--muted); margin-top: 1px; }
+
+  td.title-cell { min-width: 200px; max-width: 320px; }
+  .title-main { font-family: var(--serif); font-size: 0.88rem; color: var(--ink); line-height: 1.35; }
+
+  td.besetning-cell { white-space: nowrap; }
+  .code-pill {
+    display: inline-block; font-size: 0.7rem; padding: 1px 6px;
+    border-radius: 3px; border: 1px solid var(--border);
+    color: var(--muted); background: var(--bg); white-space: nowrap;
+  }
+  .code-pill.unknown { border-color: #c8a84b; color: #7a5c2a; background: #fdf6e3; }
+
+  td.forlag-cell { white-space: nowrap; font-size: 0.82rem; color: var(--ink); }
+  td.platenr-cell { white-space: nowrap; font-size: 0.78rem; color: var(--muted); }
+  td.year-cell { white-space: nowrap; font-size: 0.82rem; color: var(--muted); }
+  td.maaned-cell { white-space: nowrap; font-size: 0.78rem; color: var(--muted); }
+
+  td.periodikum-cell { font-size: 0.78rem; color: var(--accent2); max-width: 180px; }
+  td.kommentar-cell { font-size: 0.78rem; color: var(--muted); font-style: italic; max-width: 160px; }
+
+  /* staged badge */
+  .staged-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent2); vertical-align: middle; margin-top: -1px;
+    title: "Importert";
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.4rem; padding: 1.25rem 0 0;
+  }
+  .page-btn {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 5px; background: var(--paper);
+    font-size: 0.82rem; color: var(--muted); cursor: pointer; font-family: var(--body);
+    transition: all 0.12s;
+  }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .page-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+  .page-ellipsis { font-size: 0.82rem; color: var(--muted); padding: 0 0.2rem; }
+
+  .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
+  .error-state   { color: #a32d2d; font-size: 0.88rem; padding: 1.5rem; }
+
+  /* ── Detail drawer ── */
+  .drawer-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(26,24,20,0.35);
+    z-index: 200; backdrop-filter: blur(2px);
+  }
+  .drawer-overlay.open { display: block; }
+  .drawer {
+    position: fixed; right: 0; top: 0; bottom: 0; width: min(520px, 100vw);
+    background: var(--paper); border-left: 1px solid var(--border);
+    overflow-y: auto; z-index: 201; transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header {
+    padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .drawer-title { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; flex: 1; line-height: 1.3; }
+  .drawer-close {
+    background: none; border: none; font-size: 1.2rem; cursor: pointer;
+    color: var(--muted); padding: 0.1rem 0.3rem; line-height: 1;
+    flex-shrink: 0; transition: color 0.15s;
+  }
+  .drawer-close:hover { color: var(--ink); }
+  .drawer-body { padding: 1.25rem 1.5rem; flex: 1; }
+  .field-grid { display: grid; gap: 0.75rem; }
+  .field-row { display: grid; grid-template-columns: 120px 1fr; gap: 0.5rem; align-items: baseline; }
+  .field-label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); font-weight: 500; padding-top: 1px;
+  }
+  .field-value { font-size: 0.88rem; color: var(--ink); line-height: 1.4; word-break: break-word; }
+  .field-value.mono {
+    font-family: 'Courier New', monospace; font-size: 0.8rem;
+    background: var(--raw-bg); padding: 2px 6px; border-radius: 3px; display: inline;
+  }
+  .drawer-divider { border: none; border-top: 1px solid var(--faint); margin: 1rem 0; }
+
+  @media (max-width: 700px) {
+    .toolbar { padding: 0.6rem 1rem; }
+    .search-input { width: 180px; }
+    main { padding: 1rem 0.75rem 3rem; }
+    th.hide-sm, td.hide-sm { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="back-link" href="index.html">← Hjem</a>
+  <a class="site-name" href="index.html">Norske Notetrykk 1811–1908</a>
+  <div class="header-right">
+    <span class="raw-badge">Kildedata</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <input class="search-input" id="searchInput" type="search" placeholder="Søk tittel, person, forlag…" autocomplete="off">
+    <select class="filter-select" id="yearFilter">
+      <option value="">Alle år</option>
+    </select>
+    <select class="filter-select" id="forlagFilter">
+      <option value="">Alle forlag</option>
+    </select>
+    <select class="filter-select" id="besetningFilter">
+      <option value="">Alle besetninger</option>
+    </select>
+  </div>
+  <div class="toolbar-right">
+    <span class="count-label" id="countLabel">Laster…</span>
+    <button class="btn-reset" id="resetBtn">Nullstill</button>
+  </div>
+</div>
+
+<main>
+  <div id="tableContainer"><div class="loading-state">Laster kildedata…</div></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<!-- Detail drawer -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawerTitle">—</div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+
+const PAGE_SIZE = 100;
+
+// ── Known instrumentation codes (for "unknown" highlighting) ──
+const KNOWN_CODES = new Set([
+  '2s-p','2st','2vn','3s-p','3st','blkor','blkor-cembalo','blkor-p2','cor','dkor','ens',
+  'fl','fl-p','fl-p2','fl-vn','fl-vn-p4','git','harpe-fl','harm','mkor','mkor-p2','org',
+  'ork','p2','p4','s-2fl','s-p','s-p-git','s-salm','strkva','vc-p','vn','vn-cb','vn-p',
+  '2 vn','s-salmodikon','s-2 fl','sangbok','skolesangbok','koralbok','litur','skole',
+  'skole p','skole s','skole org','solo-kor','s-git','fl vn','s-git s-p',
+]);
+
+let allRows = [];
+let filtered = [];
+let sortKey = 'id';
+let sortDir = 'asc';
+let currentPage = 1;
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function load() {
+  try {
+    let rows = [], offset = 0;
+    while (true) {
+      const resp = await fetch(
+        `${SUPABASE_URL}/rest/v1/source_import?select=source_id,person_raw,role_raw,title_raw,instrumentation_raw,publisher_raw,plate_number_raw,publication_year_raw,month_raw,periodical_raw,comment_raw&order=source_id.asc&limit=1000&offset=${offset}`,
+        { headers: H }
+      );
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${errText.substring(0,200)}`);
+      }
+      const batch = await resp.json();
+      if (!Array.isArray(batch) || !batch.length) break;
+      rows = rows.concat(batch);
+      document.getElementById('tableContainer').innerHTML =
+        `<div class="loading-state">Laster kildedata… ${rows.length} rader</div>`;
+      if (batch.length < 1000) break;
+      offset += 1000;
+    }
+    allRows = rows;
+    buildFilters();
+    applyFilters();
+  } catch(e) {
+    document.getElementById('tableContainer').innerHTML =
+      `<div class="error-state">Feil ved lasting: ${e.message}</div>`;
+  }
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function buildFilters() {
+  const years = [...new Set(allRows.map(r => {
+    const y = r.publication_year_raw || '';
+    return y.match(/^\d{4}$/) ? y : (y.match(/^(\d{4})/)?.[1] || '');
+  }).filter(Boolean))].sort();
+
+  const forlag = [...new Set(allRows.map(r => r.publisher_raw).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
+  const beset  = [...new Set(allRows.map(r => r.instrumentation_raw).filter(Boolean))].sort((a,b) => a.localeCompare(b,'no'));
+
+  const yearSel = document.getElementById('yearFilter');
+  years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
+
+  const forlagSel = document.getElementById('forlagFilter');
+  forlag.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; forlagSel.appendChild(o); });
+
+  const bSel = document.getElementById('besetningFilter');
+  beset.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; bSel.appendChild(o); });
+}
+
+function applyFilters() {
+  const q      = document.getElementById('searchInput').value.trim().toLowerCase();
+  const year   = document.getElementById('yearFilter').value;
+  const forlag = document.getElementById('forlagFilter').value;
+  const beset  = document.getElementById('besetningFilter').value;
+
+  filtered = allRows.filter(r => {
+    if (year   && !(r.publication_year_raw || '').startsWith(year))   return false;
+    if (forlag && r.publisher_raw !== forlag)                          return false;
+    if (beset  && r.instrumentation_raw !== beset)                        return false;
+    if (q) {
+      const hay = [r.person_raw, r.title_raw, r.publisher_raw, r.instrumentation_raw, r.plate_number_raw, r.periodical_raw, r.comment_raw]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a, b) => {
+    let va, vb;
+    switch(sortKey) {
+      case 'id':         va = a.source_id;                       vb = b.source_id; break;
+      case 'person':     va = a.person_raw || '';             vb = b.person_raw || ''; break;
+      case 'tittel':     va = a.title_raw || '';             vb = b.title_raw || ''; break;
+      case 'forlag':     va = a.publisher_raw || '';             vb = b.publisher_raw || ''; break;
+      case 'year':       va = a.publication_year_raw || '';      vb = b.publication_year_raw || ''; break;
+      default:           va = a.source_id;                       vb = b.source_id;
+    }
+    if (typeof va === 'number') return sortDir === 'asc' ? va - vb : vb - va;
+    return sortDir === 'asc' ? String(va).localeCompare(String(vb), 'no') : String(vb).localeCompare(String(va), 'no');
+  });
+
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+  document.getElementById('countLabel').textContent =
+    `${filtered.length} av ${allRows.length} rader`;
+}
+
+// ── Table render ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
+  if (!page.length) {
+    document.getElementById('tableContainer').innerHTML =
+      '<div class="loading-state">Ingen treff</div>';
+    return;
+  }
+
+  const cols = [
+    { key:'id',      label:'#',           cls:'id-cell',         sort:true },
+    { key:'person',  label:'Person',      cls:'person-cell',     sort:true },
+    { key:'tittel',  label:'Tittel',      cls:'title-cell',      sort:true },
+    { key:'beset',   label:'Besetning',   cls:'besetning-cell',  sort:false },
+    { key:'forlag',  label:'Forlag',      cls:'forlag-cell hide-sm', sort:true },
+    { key:'platenr', label:'Pl.nr',       cls:'platenr-cell hide-sm', sort:false },
+    { key:'year',    label:'År',          cls:'year-cell',       sort:true },
+    { key:'maaned',  label:'Mnd',         cls:'maaned-cell hide-sm', sort:false },
+    { key:'per',     label:'Periodikum',  cls:'periodikum-cell hide-sm', sort:false },
+    { key:'komm',    label:'Kommentar',   cls:'kommentar-cell hide-sm', sort:false },
+  ];
+
+  const thead = cols.map(c => {
+    const sortable = c.sort ? 'sortable' : '';
+    const active   = c.sort && (
+      (c.key === 'id'     && sortKey === 'id')     ||
+      (c.key === 'person' && sortKey === 'person') ||
+      (c.key === 'tittel' && sortKey === 'tittel') ||
+      (c.key === 'forlag' && sortKey === 'forlag') ||
+      (c.key === 'year'   && sortKey === 'year')
+    ) ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+    const ds = c.sort ? `data-sort="${c.key}"` : '';
+    return `<th class="${sortable} ${active} ${c.cls}" ${ds}>${c.label}</th>`;
+  }).join('');
+
+  const tbody = page.map(r => {
+    const bCodes = (r.instrumentation_raw || '').split(/\s+/).filter(Boolean);
+    const bHtml = bCodes.map(code => {
+      const unk = !KNOWN_CODES.has(code) ? ' unknown' : '';
+      return `<span class="code-pill${unk}">${esc(code)}</span>`;
+    }).join(' ');
+
+    const rolleHtml = r.role_raw
+      ? `<div class="rolle-val">${esc(r.role_raw)}</div>` : '';
+
+    return `<tr class="data-row" data-id="${r.source_id}">
+      <td class="id-cell">${r.source_id}</td>
+      <td class="person-cell">
+        <div class="person-name">${esc(r.person_raw || '—')}</div>
+        ${rolleHtml}
+      </td>
+      <td class="title-cell"><div class="title-main">${esc(r.title_raw || '—')}</div></td>
+      <td class="besetning-cell">${bHtml || '<span style="color:var(--muted);font-size:0.75rem">—</span>'}</td>
+      <td class="forlag-cell hide-sm">${esc(r.publisher_raw || '—')}</td>
+      <td class="platenr-cell hide-sm">${esc(r.plate_number_raw || '—')}</td>
+      <td class="year-cell">${esc(r.publication_year_raw || '—')}</td>
+      <td class="maaned-cell hide-sm">${esc(r.month_raw || '')}</td>
+      <td class="periodikum-cell hide-sm">${esc(r.periodical_raw || '')}</td>
+      <td class="kommentar-cell hide-sm">${esc(r.comment_raw || '')}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableContainer').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${thead}</tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>`;
+
+  // Sort click handlers
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      const keyMap = { id:'id', person:'person', tittel:'tittel', forlag:'forlag', year:'year' };
+      const sk = keyMap[k] || k;
+      if (sortKey === sk) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+      else { sortKey = sk; sortDir = 'asc'; }
+      applyFilters();
+    });
+  });
+
+  // Row click → drawer
+  document.querySelectorAll('tr.data-row').forEach(tr => {
+    tr.addEventListener('click', () => openDrawer(Number(tr.dataset.id)));
+  });
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PAGE_SIZE);
+  const el = document.getElementById('pagination');
+  if (total <= 1) { el.innerHTML = ''; return; }
+
+  let html = '';
+  const prev = currentPage > 1;
+  const next = currentPage < total;
+
+  html += `<button class="page-btn ${prev ? '' : 'disabled'}" data-p="${currentPage - 1}">‹</button>`;
+
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - currentPage) <= 2) {
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-p="${i}">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 3) {
+      html += `<span class="page-ellipsis">…</span>`;
+    }
+  }
+
+  html += `<button class="page-btn ${next ? '' : 'disabled'}" data-p="${currentPage + 1}">›</button>`;
+  el.innerHTML = html;
+
+  el.querySelectorAll('.page-btn:not(.disabled)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPage = Number(btn.dataset.p);
+      renderTable();
+      renderPagination();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+// ── Drawer ────────────────────────────────────────────────────────────────────
+function openDrawer(id) {
+  const row = allRows.find(r => r.source_id === id);
+  if (!row) return;
+
+  document.getElementById('drawerTitle').textContent = row.title_raw || '—';
+
+  const fields = [
+    ['ID',            row.source_id],
+    ['Person',        row.person_raw],
+    ['Rolle',         row.role_raw],
+    ['Tittel',        row.title_raw],
+    ['Besetning',     row.instrumentation_raw],
+    ['Forlag',        row.publisher_raw],
+    ['Platenr',       row.plate_number_raw],
+    ['Utgivelsesår',  row.publication_year_raw],
+    ['Måned',         row.month_raw],
+    ['Periodikum',    row.periodical_raw],
+    ['Kommentar',     row.comment_raw],
+    ['Staged at',     row.pasted_at ? row.pasted_at.replace('T', ' ').slice(0,19) : null],
+  ];
+
+  const html = `<div class="field-grid">` +
+    fields.filter(([,v]) => v !== null && v !== undefined && v !== '').map(([label, val]) => `
+      <div class="field-row">
+        <div class="field-label">${esc(label)}</div>
+        <div class="field-value">${label === 'ID' ? `<span class="field-value mono">${val}</span>` : esc(String(val))}</div>
+      </div>`).join('') +
+    `</div>`;
+
+  document.getElementById('drawerBody').innerHTML = html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+// ── Event listeners ───────────────────────────────────────────────────────────
+let _searchTimer = null;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(applyFilters, 220);
+});
+document.getElementById('yearFilter').addEventListener('change', applyFilters);
+document.getElementById('forlagFilter').addEventListener('change', applyFilters);
+document.getElementById('besetningFilter').addEventListener('change', applyFilters);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('yearFilter').value = '';
+  document.getElementById('forlagFilter').value = '';
+  document.getElementById('besetningFilter').value = '';
+  sortKey = 'id'; sortDir = 'asc';
+  applyFilters();
+});
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+load();
+</script>
+</body>
+</html>

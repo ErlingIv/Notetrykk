@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Videresender…</title>
+<script>
+  const id = new URLSearchParams(window.location.search).get('id');
+  window.location.replace(id ? `publication.html?id=${id}` : 'index.html');
+</script>
+</head>
+<body></body>
+</html>

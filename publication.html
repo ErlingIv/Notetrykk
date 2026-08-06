@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publikasjon — Norske Notetrykk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f7f4ee;--paper:#fffef9;--ink:#1a1814;--muted:#7a7060;--faint:#e8e2d4;--accent:#8b3a1e;--accent2:#2a5c45;--border:#d4cdc0;--serif:'Playfair Display',Georgia,serif;--body:'Source Serif 4',Georgia,serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+  .site-header{background:var(--paper);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
+  .back-link{font-size:0.82rem;color:var(--muted);text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;display:flex;align-items:center;gap:0.3rem;transition:color 0.15s}
+  .back-link:hover{color:var(--accent)}
+  .site-name{font-family:var(--serif);font-size:1rem;font-weight:500;color:var(--ink);text-decoration:none}
+  .site-name:hover{color:var(--accent)}
+  main{max-width:860px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  .comp-hero{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:2rem;margin-bottom:1.5rem}
+  .comp-id{font-size:0.78rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.4rem}
+  .comp-title{font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;line-height:1.1;color:var(--ink)}
+  .comp-subtitle{font-family:var(--serif);font-size:1.1rem;font-style:italic;color:var(--muted);margin-top:0.3rem}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--faint)}
+  .meta-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:500;margin-bottom:0.25rem}
+  .meta-value{font-size:0.92rem;color:var(--ink);line-height:1.4}
+  .meta-value a{color:var(--accent2);text-decoration:none;border-bottom:1px solid var(--faint);transition:border-color 0.15s}
+  .meta-value a:hover{border-color:var(--accent2)}
+  .meta-value.muted{color:var(--muted);font-style:italic}
+  .instr-badge{display:inline-block;font-size:0.78rem;padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--muted);background:var(--bg)}
+  .instr-badge.raw{border-color:#c8a84b;color:#7a5c2a;background:#fdf6e3}
+  .section-heading{font-family:var(--serif);font-size:1.1rem;font-weight:500;color:var(--ink);margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+  .people-list{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.5rem}
+  .person-row{background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.9rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;text-decoration:none;color:inherit;transition:border-color 0.15s,box-shadow 0.15s}
+  .person-row:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(139,58,30,0.08)}
+  .person-name{font-family:var(--serif);font-size:0.95rem;font-weight:500}
+  .person-credited{font-size:0.78rem;color:var(--muted);font-style:italic;margin-top:1px}
+  .role-badge{font-size:0.68rem;padding:2px 8px;border-radius:3px;border:1px solid;white-space:nowrap;flex-shrink:0}
+  .role-Komponist{background:#f0ece4;color:#7a5c30;border-color:#d4c0a0}
+  .role-Tekstforfatter{background:#eaf3ee;color:#2a5c45;border-color:#b8d4c0}
+  .role-Arrangør{background:#eaf0f8;color:#1a4a6e;border-color:#b8cfe0}
+  .role-Bearbeider{background:#eaf0f8;color:#1a4a6e;border-color:#b8cfe0}
+  .role-Redaktør{background:#f4eaf0;color:#5c2a50;border-color:#d0b8cc}
+  .role-other{background:var(--bg);color:var(--muted);border-color:var(--border)}
+  .notes-block{background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;font-size:0.88rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem}
+  .periodical-block{background:var(--paper);border:1px solid var(--border);border-left:4px solid var(--accent2);border-radius:6px;padding:0.75rem 1rem;font-size:0.88rem;margin-bottom:1.5rem}
+  .periodical-title{font-family:var(--serif);font-weight:500;color:var(--ink)}
+  .periodical-ref{font-size:0.8rem;color:var(--muted);margin-top:2px}
+  .former-pub-block{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.9rem;font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem}
+  .raw-source-toggle{display:flex;align-items:center;background:none;border:none;cursor:pointer;font-family:var(--serif);font-size:1.1rem;font-weight:500;color:var(--muted);padding:0 0 0.5rem;width:100%;text-align:left;border-bottom:1px solid var(--border);margin-bottom:0.75rem;transition:color 0.15s;justify-content:space-between}
+  .raw-source-toggle:hover{color:var(--ink)}
+  .raw-source-body{display:none}
+  .raw-source-body.open{display:block}
+  .raw-source-table{width:100%;border-collapse:collapse;font-size:0.82rem;background:var(--paper);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .raw-source-table tr{border-bottom:1px solid var(--faint)}
+  .raw-source-table tr:last-child{border-bottom:none}
+  .raw-source-table td{padding:0.45rem 0.8rem;vertical-align:top;line-height:1.5}
+  .raw-source-table td.rs-key{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:500;white-space:nowrap;width:7rem;background:var(--bg);border-right:1px solid var(--faint)}
+  .raw-source-table td.rs-val{color:var(--ink);word-break:break-word}
+  .raw-source-table td.rs-val.empty{color:var(--muted);font-style:italic}
+  .edit-link{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:3px 10px;border-radius:4px;margin-top:0.75rem;transition:all 0.15s}
+  .edit-link:hover{color:var(--accent);border-color:var(--accent)}
+  .loading-state{text-align:center;padding:3rem;color:var(--muted);font-size:0.9rem}
+  .error-state{color:#a32d2d;font-size:0.9rem;padding:1.5rem 0}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="back-link" href="javascript:history.back()">← Tilbake</a>
+  <a class="site-name" href="index.html">Norske Notetrykk 1811–1908</a>
+</header>
+<main>
+  <div id="content"><div class="loading-state">Laster…</div></div>
+</main>
+<script>
+const SUPABASE_URL = 'https://lmsqnyssnxsiibnyguxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w0SDuDAzg3L0EmtQe4QHDg_T-bW_ADO';
+const H = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+const params = new URLSearchParams(window.location.search);
+const pubId  = params.get('id');
+
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleRawSource() {
+  const btn  = document.getElementById('rsToggle');
+  const body = document.getElementById('rsBody');
+  if (btn && body) { body.classList.toggle('open'); btn.classList.toggle('open'); }
+}
+
+async function load() {
+  const el = document.getElementById('content');
+  if (!pubId) { el.innerHTML = '<p class="error-state">Ingen publikasjons-ID angitt.</p>'; return; }
+  try {
+    // 1. Publication
+    const pub = (await fetch(`${SUPABASE_URL}/rest/v1/publication?publication_id=eq.${pubId}&select=*`, { headers: H }).then(r=>r.json()))[0];
+    if (!pub) throw new Error('Publikasjon ikke funnet');
+    document.title = `${pub.title||'Publikasjon'} — Norske Notetrykk`;
+
+    // 2. Publisher
+    let publisher = null;
+    if (pub.publisher_id) {
+      publisher = (await fetch(`${SUPABASE_URL}/rest/v1/publisher?publisher_id=eq.${pub.publisher_id}&select=publisher_id,publisher_name,city,country`, { headers: H }).then(r=>r.json()))[0];
+    }
+
+    // 3. Instrumentation via publication_instrumentation
+    let instr = null;
+    let rawInstr = null;
+    const piRows = await fetch(`${SUPABASE_URL}/rest/v1/publication_instrumentation?publication_id=eq.${pubId}&select=*`, { headers: H }).then(r=>r.json());
+    if (piRows.length) {
+      rawInstr = piRows[0].raw_instrumentation;
+      if (piRows[0].instrumentation_id) {
+        instr = (await fetch(`${SUPABASE_URL}/rest/v1/instrumentation?instrumentation_id=eq.${piRows[0].instrumentation_id}&select=instrumentation_id,legacy_code,description_no,description_en`, { headers: H }).then(r=>r.json()))[0];
+      }
+    }
+
+    // 4. Roles lookup
+    const roleRows = await fetch(`${SUPABASE_URL}/rest/v1/role?select=role_id,role_name`, { headers: H }).then(r=>r.json());
+    const roleMap = {};
+    roleRows.forEach(r => roleMap[r.role_id] = r.role_name);
+
+    // 5. People (all roles)
+    const ppRows = await fetch(`${SUPABASE_URL}/rest/v1/publication_person?publication_id=eq.${pubId}&select=*&order=sequence_no.asc`, { headers: H }).then(r=>r.json());
+    const personIds = [...new Set(ppRows.map(r=>r.person_id).filter(Boolean))];
+    const personMap = {};
+    if (personIds.length) {
+      (await fetch(`${SUPABASE_URL}/rest/v1/person?person_id=in.(${personIds.join(',')})&select=person_id,first_name,last_name,display_name`, { headers: H }).then(r=>r.json()))
+        .forEach(p => personMap[p.person_id] = p);
+    }
+
+    // 6. Periodical issue
+    let periodicalIssue = null, periodical = null;
+    if (pub.periodical_issue_id) {
+      periodicalIssue = (await fetch(`${SUPABASE_URL}/rest/v1/periodical_issue?issue_id=eq.${pub.periodical_issue_id}&select=*`, { headers: H }).then(r=>r.json()))[0];
+      if (periodicalIssue?.periodical_id) {
+        periodical = (await fetch(`${SUPABASE_URL}/rest/v1/periodical?periodical_id=eq.${periodicalIssue.periodical_id}&select=periodical_id,title,abbreviation`, { headers: H }).then(r=>r.json()))[0];
+      }
+    }
+
+    // 7. Former publishers
+    const fpRows = await fetch(`${SUPABASE_URL}/rest/v1/former_publisher?publication_id=eq.${pubId}&select=*&order=sequence_no.asc`, { headers: H }).then(r=>r.json());
+
+    // 8. Raw source import
+    let src = null;
+    if (pub.primary_source_id) {
+      src = (await fetch(`${SUPABASE_URL}/rest/v1/source_import?source_id=eq.${pub.primary_source_id}&select=*`, { headers: H }).then(r=>r.json()))[0];
+    }
+
+    // ── Render ──
+    const yearStr = formatYear(pub);
+    const instrParts = [];
+    if (instr) instrParts.push({ text: `${instr.description_no} (${instr.legacy_code})`, raw: false });
+    if (rawInstr && !instr) instrParts.push({ text: `⚠ rå: ${rawInstr}`, raw: true });
+
+    const metaItems = [
+      { label: 'År',          value: yearStr || null },
+      { label: 'Måned',       value: pub.month || null },
+      { label: 'Forlag',      value: publisher ? `<a href="publisher.html?id=${publisher.publisher_id}">${esc(publisher.publisher_name)}</a>${publisher.city?`<br><span style="font-size:0.8rem;color:var(--muted)">${esc(publisher.city)}</span>`:''}` : null },
+      { label: 'Platenummer', value: pub.plate_number || null },
+      { label: 'Type',        value: pub.publication_type || null },
+      { label: 'Besetning',   value: instrParts.length ? instrParts.map(p=>`<span class="instr-badge${p.raw?' raw':''}">${esc(p.text)}</span>`).join(' ') : null },
+    ].filter(m => m.value);
+
+    // People
+    const roleOrder = ['Komponist','Tekstforfatter','Arrangør','Bearbeider','Redaktør','Oversetter','Utgiver'];
+    const sortedPeople = [...ppRows].sort((a,b) => {
+      const ra = roleMap[a.role_id] || 'z';
+      const rb = roleMap[b.role_id] || 'z';
+      return (roleOrder.indexOf(ra)||99) - (roleOrder.indexOf(rb)||99);
+    });
+
+    const peopleHtml = sortedPeople.length ? `
+      <div class="section-heading">Personer</div>
+      <div class="people-list">
+        ${sortedPeople.map(row => {
+          const p = personMap[row.person_id];
+          const name = p ? (p.display_name || [p.last_name, p.first_name].filter(Boolean).join(', ')) : null;
+          const roleName = roleMap[row.role_id] || '—';
+          const roleClass = roleOrder.includes(roleName) ? `role-${roleName}` : 'role-other';
+          if (!name && !row.credited_as) return '';
+          return `
+            <a class="person-row" href="${row.person_id?`composer.html?id=${row.person_id}`:'#'}">
+              <div>
+                <div class="person-name">${esc(name || row.credited_as || '—')}</div>
+                ${row.credited_as && name && row.credited_as !== name ? `<div class="person-credited">Kreditert som: ${esc(row.credited_as)}</div>` : ''}
+                ${!name && row.credited_as ? `<div class="person-credited" style="color:var(--accent)">⚠ Ukjent person — kreditert som: ${esc(row.credited_as)}</div>` : ''}
+              </div>
+              <span class="role-badge ${roleClass}">${esc(roleName)}</span>
+            </a>`;
+        }).join('')}
+      </div>` : '';
+
+    const periodicalHtml = periodicalIssue ? `
+      <div class="section-heading">Periodikum</div>
+      <div class="periodical-block">
+        <div class="periodical-title">${periodical ? esc(periodical.title) : '—'}</div>
+        <div class="periodical-ref">${esc(periodicalIssue.raw_reference||'')}${periodicalIssue.series_label?` · ${esc(periodicalIssue.series_label)}`:''}</div>
+      </div>` : '';
+
+    const formerPubHtml = fpRows.length ? `
+      <div class="section-heading">Tidligere forlag</div>
+      <div class="former-pub-block">
+        ${fpRows.map(fp => `Fra: ${esc(fp.raw_former_publisher||'—')}`).join(' · ')}
+      </div>` : '';
+
+    const notesHtml = pub.composition_notes ? `
+      <div class="section-heading">Kommentarer</div>
+      <div class="notes-block">${esc(pub.composition_notes).replace(/\n/g,'<br>')}</div>` : '';
+
+    const rawFields = [
+      ['Person', src?.person_raw], ['Rolle', src?.role_raw], ['Tittel', src?.title_raw],
+      ['Besetning', src?.instrumentation_raw], ['Forlag', src?.publisher_raw],
+      ['Platenr', src?.plate_number_raw], ['Utgivelsesår', src?.publication_year_raw],
+      ['Måned', src?.month_raw], ['Periodikum', src?.periodical_raw], ['Kommentar', src?.comment_raw],
+    ];
+    const rawSourceHtml = src ? `
+      <div style="margin-bottom:1.5rem">
+        <button class="raw-source-toggle" id="rsToggle" onclick="toggleRawSource()">
+          Kildedata (råoppføring) <span>▼</span>
+        </button>
+        <div class="raw-source-body" id="rsBody">
+          <table class="raw-source-table">
+            ${rawFields.map(([k,v]) => {
+              const empty = v===null||v===undefined||v==='';
+              return `<tr><td class="rs-key">${esc(k)}</td><td class="rs-val${empty?' empty':''}">${empty?'—':esc(String(v))}</td></tr>`;
+            }).join('')}
+          </table>
+        </div>
+      </div>` : '';
+
+    el.innerHTML = `
+      <div class="comp-hero">
+        <div class="comp-id">Publikasjon #${pub.publication_id}${src?` · Kilde #${pub.primary_source_id}`:''}</div>
+        <h1 class="comp-title">${esc(pub.title||'—')}</h1>
+        ${pub.subtitle?`<p class="comp-subtitle">${esc(pub.subtitle)}</p>`:''}
+        <div class="meta-grid">
+          ${metaItems.map(m=>`<div class="meta-item"><div class="meta-label">${m.label}</div><div class="meta-value">${m.value}</div></div>`).join('')}
+        </div>
+        <a class="edit-link" href="publication_review.html?id=${pub.publication_id}">✏ Rediger i gjennomgangsverktøy</a>
+      </div>
+      ${peopleHtml}
+      ${periodicalHtml}
+      ${formerPubHtml}
+      ${notesHtml}
+      ${rawSourceHtml}
+    `;
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<p class="error-state">Feil: ${esc(e.message)}</p>`;
+  }
+}
+
+function formatYear(c) {
+  if (!c.year_issued) return '';
+  if (c.year_qualifier==='range'&&c.year_issued_end) return `${c.year_issued}–${c.year_issued_end}`;
+  if (c.year_qualifier==='circa')  return `ca. ${c.year_issued}`;
+  if (c.year_qualifier==='before') return `f. ${c.year_issued}`;
+  if (c.year_qualifier==='decade') return `${c.year_issued}0-åra`;
+  return String(c.year_issued);
+}
+
+load();
+</script>
+</body>
+</html>
