@@ -146,11 +146,26 @@ let allComposers = [], allPublishers = [], activeLetter = 'ALL', activeTab = 'co
 // role_id for Komponist — resolved on load
 let komponistRoleId = null;
 
+// Restore tab/letter from the URL so browser back navigation (e.g. from a
+// composer page) returns to the same filtered view instead of a reset page.
+const initialParams = new URLSearchParams(window.location.search);
+if (initialParams.get('letter')) activeLetter = initialParams.get('letter');
+if (window.location.hash === '#publishers') activeTab = 'publishers';
+
+function updateURL() {
+  const params = new URLSearchParams();
+  if (activeLetter !== 'ALL') params.set('letter', activeLetter);
+  const qs = params.toString();
+  const hash = activeTab === 'publishers' ? '#publishers' : '';
+  history.replaceState(null, '', `index.html${qs?'?'+qs:''}${hash}`);
+}
+
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.section === tab));
   document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
+  updateURL();
 }
 
 async function fetchAll(path) {
@@ -234,7 +249,7 @@ function composerCard(c) {
     </a>`;
 }
 
-function setLetter(l) { activeLetter = l; renderComposers(); }
+function setLetter(l) { activeLetter = l; renderComposers(); updateURL(); }
 
 async function fetchPublishers() {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/publisher?select=publisher_id,publisher_name,city,country,is_self_published,is_unknown&order=publisher_name.asc`, { headers: H });
@@ -366,6 +381,7 @@ document.addEventListener('click', e => {
   }
 });
 
+if (activeTab === 'publishers') switchTab('publishers');
 fetchComposers();
 fetchPublishers();
 </script>
