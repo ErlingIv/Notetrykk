@@ -14,6 +14,8 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 .ph{padding:1.25rem;border-bottom:1px solid var(--border)}
 .pt{font-family:var(--serif);font-size:1rem;font-weight:700;margin-bottom:.75rem}
 .pt span{color:var(--accent)}
+.pt a{color:inherit;text-decoration:none}
+.pt a:hover{color:var(--accent)}
 .sg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
 .sf{grid-column:1/-1}
 .sl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.2rem}
@@ -129,7 +131,7 @@ body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:10
 <div class="app">
 <div class="left">
   <div class="ph">
-    <div class="pt" style="display:flex;align-items:center">Norske Notetrykk <span style="margin-left:.3rem">/ Gjennomgang</span><button class="key-badge" id="key-badge-btn" title="Endre tjenestenøkkel">🔑 Nøkkel</button></div>
+    <div class="pt" style="display:flex;align-items:center"><a href="index.html">Norske Notetrykk</a> <span style="margin-left:.3rem">/ Gjennomgang</span><button class="key-badge" id="key-badge-btn" title="Endre tjenestenøkkel">🔑 Nøkkel</button></div>
     <div class="sg">
       <div class="sf"><label class="sl">Tittel</label><input class="si" id="s-title" placeholder="Søk i tittel..." autocomplete="off"></div>
       <div><label class="sl">ID</label><input class="si" id="s-id" placeholder="42" type="number"></div>
