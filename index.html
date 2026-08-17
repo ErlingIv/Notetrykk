@@ -101,7 +101,7 @@
     <div class="search-wrap-publisher">
       <label class="search-label">Platenummer</label>
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="top:calc(50% + 10px)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <input class="search-input" type="text" placeholder="Platenummer…" oninput="handlePlateSearch(this.value)" autocomplete="off">
+      <input class="search-input" type="text" placeholder="Platenummer…" oninput="handlePlateSearch(this.value)" onkeydown="handlePlateKeydown(event)" autocomplete="off">
       <div class="search-results" id="plateSearchResults"></div>
     </div>
     <div class="search-wrap-year">
@@ -299,6 +299,12 @@ function handlePlateSearch(query) {
   _plateTimeout = setTimeout(() => doPlateSearch(query.trim()), 280);
 }
 
+function handlePlateKeydown(e) {
+  if (e.key !== 'Enter') return;
+  const query = e.target.value.trim();
+  if (query) window.location = `plate.html?p=${encodeURIComponent(query)}`;
+}
+
 function handleYearSearch(query) {
   clearTimeout(_yearTimeout);
   const el = document.getElementById('yearSearchResults');
@@ -344,9 +350,13 @@ async function doPlateSearch(query) {
   const el = document.getElementById('plateSearchResults');
   el.style.display = 'block'; el.innerHTML = '<div class="search-empty">Søker…</div>';
   try {
-    const rows = await fetch(`${SUPABASE_URL}/rest/v1/publication?plate_number=ilike.*${encodeURIComponent(query)}*&select=publication_id,title,year_issued,plate_number&order=plate_number.asc&limit=8`, { headers: H }).then(r => r.json());
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/publication?plate_number=ilike.*${encodeURIComponent(query)}*&select=publication_id,title,year_issued,plate_number&order=plate_number.asc&limit=8`, { headers: { ...H, Prefer: 'count=exact' } });
+    const rows = await r.json();
     if (!rows.length) { el.innerHTML = '<div class="search-empty">Ingen treff</div>'; return; }
-    el.innerHTML = rows.map(c => `<a class="search-result-item" href="publication.html?id=${c.publication_id}"><span class="search-result-title">${c.title||'—'}</span><span class="search-result-meta">Pl. ${c.plate_number}${c.year_issued?' · '+c.year_issued:''}</span></a>`).join('');
+    const total = parseInt((r.headers.get('content-range') || '').split('/')[1], 10) || rows.length;
+    let html = rows.map(c => `<a class="search-result-item" href="publication.html?id=${c.publication_id}"><span class="search-result-title">${c.title||'—'}</span><span class="search-result-meta">Pl. ${c.plate_number}${c.year_issued?' · '+c.year_issued:''}</span></a>`).join('');
+    if (total > rows.length) html += `<a class="search-result-item" href="plate.html?p=${encodeURIComponent(query)}" style="justify-content:center;color:var(--accent);font-weight:500;">Vis alle ${total} treff for «${query}» →</a>`;
+    el.innerHTML = html;
   } catch(e) { el.innerHTML = '<div class="search-empty">Søkefeil</div>'; }
 }
 
