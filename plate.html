@@ -89,9 +89,14 @@ function renderTable() {
   if (!publications) return;
   const sortKey = window._sortKey || 'plate';
   const sortDir = window._sortDir || 'asc';
+  const sortVal = c => {
+    if (sortKey==='year') return String(c.year_issued||'');
+    if (sortKey==='publisher') return publisherMap[c.publisher_id]?.publisher_name || '';
+    if (sortKey==='plate') return c.plate_number || '';
+    return c.title || '';
+  };
   const sorted = [...publications].sort((a,b) => {
-    const va = sortKey==='year' ? String(a.year_issued||'') : sortKey==='title' ? (a.title||'') : (a.plate_number||'');
-    const vb = sortKey==='year' ? String(b.year_issued||'') : sortKey==='title' ? (b.title||'') : (b.plate_number||'');
+    const va = sortVal(a), vb = sortVal(b);
     return sortDir==='asc' ? va.localeCompare(vb,'no') : vb.localeCompare(va,'no');
   });
   document.querySelectorAll('.score-table th.sortable').forEach(th => {
@@ -208,7 +213,7 @@ async function load() {
               <th>ID</th>
               <th class="sortable" data-sort="title">Tittel</th>
               <th class="sortable hide-sm" data-sort="year">År</th>
-              <th class="hide-sm">Forlag</th>
+              <th class="sortable hide-sm" data-sort="publisher">Forlag</th>
               <th class="sortable hide-sm" data-sort="plate">Platenr</th>
               <th class="hide-sm">Besetning</th>
             </tr></thead>
